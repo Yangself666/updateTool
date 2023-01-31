@@ -1,0 +1,12 @@
+server:
+  port: 8080
+datasource:
+  path: updateTool.db
+remote-servers:
+  - host: 127.0.0.1
+    port: 22
+    username: username
+    password: password
+enable-path:
+  - /tmp
+

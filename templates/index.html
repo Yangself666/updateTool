@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>文件上传</title>
+    <style type="text/css">
+        body {
+            font-family: Arial;
+            font-size: 14px;
+        }
+        #container {
+            width: 500px;
+            margin: 0 auto;
+            padding: 10px;
+            background-color: #f8f8f8;
+        }
+        #form {
+            padding: 10px;
+            background-color: #f8f8f8;
+            border: 1px solid #ccc;
+        }
+        #form input {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+<div id="container">
+    <h1>文件上传</h1>
+    <form id="form" action="/uploadFile" method="post" enctype="multipart/form-data">
+        <label>文本行：</label>
+        <input type="text" name="text" />
+        <label>文件：</label>
+        <input type="file" name="file" />
+        <input type="submit" name="submit" value="提交" />
+    </form>
+</div>
+</body>
+</html>
