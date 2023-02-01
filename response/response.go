@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func Html(c *gin.Context, httpStatus int, template string, data gin.H) {
+func Html(c *gin.Context, httpStatus int, template string, data interface{}) {
 	c.HTML(httpStatus, template, data)
 }
 

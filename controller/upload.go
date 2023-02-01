@@ -5,7 +5,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"log"
-	"net/http"
 	"os"
 	"path"
 	"time"
@@ -15,11 +14,6 @@ import (
 	"updateTool/sftp"
 	"updateTool/util"
 )
-
-// Index 返回首页
-func Index(c *gin.Context) {
-	response.Html(c, http.StatusOK, "index.html", nil)
-}
 
 // UploadFile 上传文件接口
 func UploadFile(c *gin.Context) {
