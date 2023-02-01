@@ -1,6 +1,5 @@
 server:
   port: 8080
-  mode: prod
 datasource:
   path: updateTool.db
 remote-servers:

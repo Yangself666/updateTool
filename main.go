@@ -22,13 +22,6 @@ func main() {
 
 	r := gin.Default()
 	r = CollectRoute(r)
-
-	// 设置为生产模式
-	mode := viper.GetString("server.mode")
-	if mode == "prod" {
-		gin.SetMode(gin.ReleaseMode)
-	}
-
 	r.LoadHTMLGlob("templates/*")
 	port := viper.GetString("server.port")
 	if port != "" {
