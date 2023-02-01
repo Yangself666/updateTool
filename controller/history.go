@@ -25,6 +25,26 @@ func Rollback(c *gin.Context) {
 	DB := common.GetDB()
 	history := model.UpdateHistory{}
 	DB.First(&history, rollbackId)
+	// 开始回滚，上传文件
+	// 传输文件到所有服务器
+	isZipFile := util.FileIsZip(history.FileName)
+	var err error
+	if isZipFile {
+		// 这里进行解压缩的上传
+		err = sftp.SendZipFileToAllServer(
+			history.LocalPath,
+			history.RemotePath)
+	} else {
+		err = sftp.SendFileToAllServer(
+			history.LocalPath,
+			history.RemotePath,
+			history.FileName)
+	}
+	if err != nil {
+		response.Fail(c, nil, err.Error())
+		return
+	}
+
 	//添加新的记录
 
 	otherInfo := fmt.Sprintf("%v回滚至历史记录[%v]", time.Now().Format("2006-01-02 15:04:05"), history.ID)
@@ -38,20 +58,6 @@ func Rollback(c *gin.Context) {
 	// 保存回滚记录
 	DB.Create(&newHistory)
 
-	// 开始回滚，上传文件
-	// 传输文件到所有服务器
-	isZipFile := util.FileIsZip(history.FileName)
-	if isZipFile {
-		// 这里进行解压缩的上传
-		sftp.SendZipFileToAllServer(
-			history.LocalPath,
-			history.RemotePath)
-	} else {
-		sftp.SendFileToAllServer(
-			history.LocalPath,
-			history.RemotePath,
-			history.FileName)
-	}
 	// 计算处理总时间
 	elapsed := time.Since(start)
 	response.Success(c, nil, fmt.Sprintf("回滚至历史记录[%v]成功，耗时: %v", history.ID, elapsed))

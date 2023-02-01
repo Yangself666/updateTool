@@ -58,6 +58,25 @@ func UploadFile(c *gin.Context) {
 		return
 	}
 
+	// 传输文件到所有服务器
+	isZipFile := util.FileIsZip(file.Filename)
+	if isZipFile {
+		// 这里进行解压缩的上传
+		err = sftp.SendZipFileToAllServer(
+			localFilePath,
+			remotePath)
+	} else {
+		err = sftp.SendFileToAllServer(
+			localFilePath,
+			remotePath,
+			file.Filename)
+	}
+
+	if err != nil {
+		response.Fail(c, nil, err.Error())
+		return
+	}
+
 	// 保存关联关系
 	DB := common.GetDB()
 
@@ -75,20 +94,6 @@ func UploadFile(c *gin.Context) {
 		log.Println("保存上传记录时发生错误：", err)
 		response.Fail(c, nil, "保存上传记录时发生错误")
 		return
-	}
-
-	// 传输文件到所有服务器
-	isZipFile := util.FileIsZip(file.Filename)
-	if isZipFile {
-		// 这里进行解压缩的上传
-		sftp.SendZipFileToAllServer(
-			localFilePath,
-			remotePath)
-	} else {
-		sftp.SendFileToAllServer(
-			localFilePath,
-			remotePath,
-			file.Filename)
 	}
 	// 计算处理总时间
 	elapsed := time.Since(start)

@@ -14,10 +14,11 @@ import (
 	"updateTool/util"
 )
 
-func SendFileToAllServer(localFilePath string, remotePath string, remoteFileName string) {
+func SendFileToAllServer(localFilePath string, remotePath string, remoteFileName string) error {
 	servers := util.GetServers()
+	var err error
 	for _, info := range servers {
-		SendFileToServer(
+		err = SendFileToServer(
 			info.Username,
 			info.Password,
 			info.Host,
@@ -25,20 +26,29 @@ func SendFileToAllServer(localFilePath string, remotePath string, remoteFileName
 			localFilePath,
 			remotePath,
 			remoteFileName)
+		if err != nil {
+			break
+		}
 	}
+	return err
 }
 
-func SendZipFileToAllServer(localFilePath string, remotePath string) {
+func SendZipFileToAllServer(localFilePath string, remotePath string) error {
 	servers := util.GetServers()
+	var err error
 	for _, info := range servers {
-		SendZipFileToServer(
+		err := SendZipFileToServer(
 			info.Username,
 			info.Password,
 			info.Host,
 			info.Port,
 			localFilePath,
 			remotePath)
+		if err != nil {
+			break
+		}
 	}
+	return err
 }
 
 // SendZipFileToServer 发送文件到服务器
