@@ -227,8 +227,8 @@ func uploadFile(client *sftp.Client, localFilePath string, remotePath string, re
 	// 打开本地文件
 	srcFile, err := os.Open(localFilePath)
 	if err != nil {
-		log.Println("["+localFilePath+"] 文件打开失败", err)
-		return common.Error("[" + localFilePath + "] 文件打开失败")
+		log.Println("["+localFilePath+"] 文件打开失败，本地文件不存在或权限不足", err)
+		return common.Error("[" + localFilePath + "] 本地文件不存在或权限不足")
 	}
 	// 提前关闭文件
 	defer srcFile.Close()
@@ -237,15 +237,15 @@ func uploadFile(client *sftp.Client, localFilePath string, remotePath string, re
 	}
 	dstFile, err := client.Create(path.Join(remotePath, remoteFileName))
 	if err != nil {
-		log.Println("["+path.Join(remotePath, remoteFileName)+"] 文件创建失败：", err)
-		return common.Error("[" + path.Join(remotePath, remoteFileName) + "] 文件创建失败")
+		log.Println("["+path.Join(remotePath, remoteFileName)+"] 文件创建失败，远程文件不存在或权限不足：", err)
+		return common.Error("[" + path.Join(remotePath, remoteFileName) + "] 文件创建失败，远程文件不存在或权限不足")
 	}
 	defer dstFile.Close()
 
 	file, err := io.ReadAll(srcFile)
 	if err != nil {
-		log.Println("["+localFilePath+"] 文件读取失败", err)
-		return common.Error("[" + localFilePath + "] 文件读取失败")
+		log.Println("["+localFilePath+"] 文件读取失败，本地文件不存在或权限不足", err)
+		return common.Error("[" + localFilePath + "] 文件读取失败，本地文件不存在或权限不足")
 	}
 	// 写入文件
 	_, err = dstFile.Write(file)
@@ -291,8 +291,8 @@ func uploadZipFile(client *sftp.Client, zipFile *zip.File, remotePath string) er
 	// 创建远程文件
 	dstFile, err := client.Create(remoteFilePath)
 	if err != nil {
-		log.Println("["+remoteFilePath+"] 文件创建失败：", err)
-		return common.Error("[" + remoteFilePath + "] 文件创建失败")
+		log.Println("["+remoteFilePath+"] 文件创建失败，远程文件不存在或权限不足：", err)
+		return common.Error("[" + remoteFilePath + "] 文件创建失败，远程文件不存在或权限不足")
 	}
 	defer dstFile.Close()
 
