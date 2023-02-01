@@ -8,7 +8,7 @@
             font-size: 14px;
         }
         #container {
-            width: 1100px;
+            width: 1000px;
             margin: 0 auto;
             padding: 10px;
             background-color: #f8f8f8;
@@ -49,8 +49,8 @@
                 <th>历史ID</th>
                 <th>更新时间</th>
                 <th>远程路径</th>
-                <th>存档路径</th>
                 <th>文件名称</th>
+                <th>存档路径</th>
                 <th>其他信息</th>
                 <th>操作</th>
             </tr>
@@ -59,8 +59,8 @@
                 <td>{{.ID}}</td>
                 <td>{{.UpdatedAt.Format "2006-01-02 15:04:05"}}</td>
                 <td>{{.RemotePath}}</td>
-                <td>{{.LocalPath}}</td>
                 <td>{{.FileName}}</td>
+                <td>{{.LocalPath}}</td>
                 <td>{{.OtherInfo}}</td>
                 <td>
                     <form action="/rollback" method="post">
