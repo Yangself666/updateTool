@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"strings"
 	"time"
 	"updateTool/common"
 	"updateTool/model"
@@ -25,6 +26,11 @@ func Rollback(c *gin.Context) {
 	DB := common.GetDB()
 	history := model.UpdateHistory{}
 	DB.First(&history, rollbackId)
+
+	// 如果远程路径不是以/结尾，添加/
+	if !strings.HasSuffix(history.RemotePath, "/") {
+		history.RemotePath += "/"
+	}
 
 	enablePath := util.IsEnablePath(history.RemotePath)
 	if !enablePath {

@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"strings"
 	"time"
 	"updateTool/common"
 	"updateTool/model"
@@ -21,6 +22,10 @@ func UploadFile(c *gin.Context) {
 	if remotePath == "" {
 		response.Fail(c, nil, "上传文件的远程路径不能为空")
 		return
+	}
+	// 如果远程路径不是以/结尾，添加/
+	if !strings.HasSuffix(remotePath, "/") {
+		remotePath += "/"
 	}
 	enablePath := util.IsEnablePath(remotePath)
 	if !enablePath {
