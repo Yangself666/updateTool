@@ -25,6 +25,13 @@ func Rollback(c *gin.Context) {
 	DB := common.GetDB()
 	history := model.UpdateHistory{}
 	DB.First(&history, rollbackId)
+
+	enablePath := util.IsEnablePath(history.RemotePath)
+	if !enablePath {
+		response.Fail(c, nil, "远程路径不在白名单，无法回滚，请联系管理员添加")
+		return
+	}
+
 	// 开始回滚，上传文件
 	// 传输文件到所有服务器
 	isZipFile := util.FileIsZip(history.FileName)

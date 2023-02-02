@@ -35,7 +35,10 @@ func IsEnablePath(remotePath string) bool {
 	slice := viper.GetStringSlice("enable-path")
 	result := false
 	for _, str := range slice {
-		if strings.Index(remotePath, str) == 0 {
+		if !strings.HasSuffix(str, "/") {
+			str += "/"
+		}
+		if strings.HasPrefix(remotePath, str) {
 			result = true
 			break
 		}
@@ -53,7 +56,7 @@ func FileIsZip(fileName string) bool {
 }
 
 func IsMacUseless(zipFile *zip.File) bool {
-	if strings.Index(zipFile.Name, "__MACOSX/") == 0 {
+	if strings.HasPrefix(zipFile.Name, "__MACOSX/") {
 		return true
 	}
 	if zipFile.FileInfo().Name() == ".DS_Store" {
