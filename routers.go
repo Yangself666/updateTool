@@ -8,12 +8,22 @@ import (
 
 func CollectRoute(r *gin.Engine) *gin.Engine {
 	r.Use(middleware.CORSMiddleware())
-	//r.GET("/", controller.Index)
-	r.POST("/login", controller.Login)
-	r.POST("/uploadFile", middleware.AuthMiddleware(), controller.UploadFile)
-	r.POST("/getHistory", middleware.AuthMiddleware(), controller.GetHistory)
-	r.POST("/rollback", middleware.AuthMiddleware(), controller.Rollback)
-	//r.GET("/reload", controller.Reload)
-	r.StaticFile("/", "index.html")
+	// 静态文件路由
+	r.StaticFile("/", "resource/web/index.html")
+	r.Static("/static", "resource/web/static")
+	// 解决vue等前端路由问题（gin路由不存在返回首页）
+	r.NoRoute(func(c *gin.Context) {
+		c.Request.URL.Path = "/"
+		r.HandleContext(c)
+	})
+
+	// 服务接口
+	apiRoutes := r.Group("/api")
+	apiRoutes.POST("/login", controller.Login)
+	apiRoutes.POST("/uploadFile", middleware.AuthMiddleware(), controller.UploadFile)
+	apiRoutes.POST("/getHistory", middleware.AuthMiddleware(), controller.GetHistory)
+	apiRoutes.POST("/rollback", middleware.AuthMiddleware(), controller.Rollback)
+	apiRoutes.GET("/reload", controller.Reload)
+
 	return r
 }

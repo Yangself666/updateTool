@@ -20,7 +20,12 @@ func main() {
 	CheckServers()
 
 	r := gin.Default()
+	// 不记录静态文件日志
+	gin.LoggerWithWriter(gin.DefaultWriter, "/static")
+	// 加载路由
 	r = CollectRoute(r)
+
+	// 获取启动端口
 	port := viper.GetString("server.port")
 	if port != "" {
 		panic(r.Run(":" + port))
