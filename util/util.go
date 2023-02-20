@@ -13,6 +13,7 @@ func GetUUID() string {
 	return strings.ReplaceAll(uuid.New().String(), "-", "")
 }
 
+// GetServers 获取配置中国的服务器
 func GetServers() []model.ServerInfo {
 	var serverList []model.ServerInfo
 	mapString := viper.Get("remote-servers").([]interface{})
@@ -46,6 +47,7 @@ func IsEnablePath(remotePath string) bool {
 	return result
 }
 
+// FileIsZip 检查文件是否为Zip压缩包
 func FileIsZip(fileName string) bool {
 	split := strings.Split(fileName, ".")
 	length := len(split)
@@ -55,6 +57,7 @@ func FileIsZip(fileName string) bool {
 	return "zip" == split[length-1]
 }
 
+// IsMacUseless 检查是否为Mac中的无用文件
 func IsMacUseless(zipFile *zip.File) bool {
 	if strings.HasPrefix(zipFile.Name, "__MACOSX/") {
 		return true

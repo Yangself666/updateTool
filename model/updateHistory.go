@@ -2,6 +2,7 @@ package model
 
 import "gorm.io/gorm"
 
+// UpdateHistory 更新历史
 type UpdateHistory struct {
 	gorm.Model
 	RemotePath     string `gorm:"type:varchar(500);not null" json:"remotePath"`
