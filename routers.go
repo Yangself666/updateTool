@@ -8,11 +8,12 @@ import (
 
 func CollectRoute(r *gin.Engine) *gin.Engine {
 	r.Use(middleware.CORSMiddleware())
-	r.GET("/", controller.Index)
+	//r.GET("/", controller.Index)
 	r.POST("/login", controller.Login)
-	r.POST("/uploadFile", controller.UploadFile)
-	r.POST("/getHistory", controller.GetHistory)
-	r.POST("/rollback", controller.Rollback)
-	r.GET("/reload", controller.Reload)
+	r.POST("/uploadFile", middleware.AuthMiddleware(), controller.UploadFile)
+	r.POST("/getHistory", middleware.AuthMiddleware(), controller.GetHistory)
+	r.POST("/rollback", middleware.AuthMiddleware(), controller.Rollback)
+	//r.GET("/reload", controller.Reload)
+	r.StaticFile("/", "index.html")
 	return r
 }

@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"log"
 	"strings"
 	"updateTool/common"
 	"updateTool/model"
@@ -14,8 +13,6 @@ func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 获取authorization header
 		tokenString := c.GetHeader("Authorization")
-
-		log.Println(tokenString)
 
 		// 检查token格式是否正确
 		if tokenString == "" || !strings.HasPrefix(tokenString, "Bearer ") {

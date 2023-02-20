@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"log"
-	"os"
 	"updateTool/common"
 	"updateTool/sftp"
 	"updateTool/util"
@@ -22,7 +21,6 @@ func main() {
 
 	r := gin.Default()
 	r = CollectRoute(r)
-	r.LoadHTMLGlob("templates/*")
 	port := viper.GetString("server.port")
 	if port != "" {
 		panic(r.Run(":" + port))
@@ -31,10 +29,9 @@ func main() {
 }
 
 func InitConfig() {
-	workDir, _ := os.Getwd()
 	viper.SetConfigName("config")
 	viper.SetConfigType("yml")
-	viper.AddConfigPath(workDir + "/config")
+	viper.AddConfigPath("resource/config")
 	err := viper.ReadInConfig()
 	if err != nil {
 		panic(err)

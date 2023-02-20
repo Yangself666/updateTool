@@ -51,7 +51,8 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	c.Header("Authorization", "bearer "+token)
+	// 将Token放置到Header中返回
+	c.Header("Authorization", "Bearer "+token)
 	// 返回结果
 	response.Success(c, nil, "登录成功")
 	return
