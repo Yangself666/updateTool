@@ -16,6 +16,10 @@ import (
 	"updateTool/util"
 )
 
+/*
+上传文件Controller
+*/
+
 // UploadFile 上传文件接口
 func UploadFile(c *gin.Context) {
 	remotePath := c.PostForm("remotePath")

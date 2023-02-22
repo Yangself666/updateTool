@@ -10,15 +10,18 @@ import (
 	"updateTool/response"
 )
 
-/**
-用户相关Controller
+/*
+登陆相关Controller
 */
 
 // Login 用户登陆
 func Login(c *gin.Context) {
 	// 获取登陆参数中的邮件地址和密码
-	email := c.PostForm("email")
-	password := c.PostForm("password")
+	// 获取json
+	param := make(map[string]string)
+	c.BindJSON(&param)
+	email := param["email"]
+	password := param["password"]
 
 	// 检查参数是否传递
 	if email == "" || password == "" {
@@ -27,11 +30,11 @@ func Login(c *gin.Context) {
 	}
 
 	// 首先通过邮件地址查找是否有该用户
-	db := common.GetDB()
+	DB := common.GetDB()
 	var userByEmail = model.User{}
 
 	// 使用邮箱查询用户是否存在
-	db.First(&userByEmail, model.User{Email: email})
+	DB.First(&userByEmail, model.User{Email: email})
 	if userByEmail.ID == 0 {
 		response.Fail(c, nil, "用户不存在")
 		return

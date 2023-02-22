@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"net/http"
 	"updateTool/controller"
 	"updateTool/middleware"
 )
@@ -13,16 +14,35 @@ func CollectRoute(r *gin.Engine) *gin.Engine {
 	r.Static("/static", "resource/web/static")
 	// 解决vue等前端路由问题（gin路由不存在返回首页）
 	r.NoRoute(func(c *gin.Context) {
-		c.Request.URL.Path = "/"
-		r.HandleContext(c)
+		c.Redirect(http.StatusFound, "/")
 	})
 
-	// 服务接口
+	// 服务接口组
 	apiRoutes := r.Group("/api")
+	// 登陆
 	apiRoutes.POST("/login", controller.Login)
+
+	// 用户相关接口
+	userApi := apiRoutes.Group("/user", middleware.AuthMiddleware())
+	// 登陆用户获取信息
+	userApi.POST("/info", controller.Info)
+
+	// 用户相关接口
+	projectApi := apiRoutes.Group("/project", middleware.AuthMiddleware())
+	// 添加项目信息
+	projectApi.POST("/add", controller.AddProject)
+	// 删除项目信息
+	projectApi.POST("/del", controller.DelProject)
+	// 修改项目信息
+	projectApi.POST("/edit", controller.EditProject)
+
+	// 上传文件
 	apiRoutes.POST("/uploadFile", middleware.AuthMiddleware(), controller.UploadFile)
+	// 获取上传历史
 	apiRoutes.POST("/getHistory", middleware.AuthMiddleware(), controller.GetHistory)
+	// 回滚
 	apiRoutes.POST("/rollback", middleware.AuthMiddleware(), controller.Rollback)
+	// 重新读取配置文件
 	apiRoutes.GET("/reload", controller.Reload)
 
 	return r

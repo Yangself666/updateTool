@@ -4,21 +4,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"log"
-	"net/http"
 	"os"
-	"updateTool/common"
-	"updateTool/model"
 	"updateTool/response"
 )
 
-// Index 返回首页
-func Index(c *gin.Context) {
-	DB := common.GetDB()
-	var histories []model.UpdateHistory
-	DB.Order("updated_at desc").Find(&histories)
-	response.Html(c, http.StatusOK, "index.html", gin.H{"list": histories})
-}
-
+// Reload 更新配置文件
 func Reload(c *gin.Context) {
 	workDir, _ := os.Getwd()
 	viper.SetConfigName("config")

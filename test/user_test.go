@@ -7,6 +7,7 @@ import (
 )
 
 func TestLogin(t *testing.T) {
-	password, _ := bcrypt.GenerateFromPassword([]byte("testtest"), bcrypt.DefaultCost)
+	// 生成密码
+	password, _ := bcrypt.GenerateFromPassword([]byte("wxn123456"), bcrypt.DefaultCost)
 	fmt.Println(string(password))
 }
