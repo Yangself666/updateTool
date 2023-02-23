@@ -27,7 +27,7 @@ func CollectRoute(r *gin.Engine) *gin.Engine {
 	// 登陆用户获取信息
 	userApi.POST("/info", controller.Info)
 
-	// 用户相关接口
+	// 项目管理相关接口
 	projectApi := apiRoutes.Group("/project", middleware.AuthMiddleware())
 	// 添加项目信息
 	projectApi.POST("/add", controller.AddProject)
@@ -35,6 +35,19 @@ func CollectRoute(r *gin.Engine) *gin.Engine {
 	projectApi.POST("/del", controller.DelProject)
 	// 修改项目信息
 	projectApi.POST("/edit", controller.EditProject)
+	// 获取项目列表
+	projectApi.POST("/list", controller.GetProjectList)
+
+	// 服务器管理相关接口
+	serverApi := apiRoutes.Group("/server", middleware.AuthMiddleware())
+	// 添加项目信息
+	serverApi.POST("/add", controller.AddServer)
+	// 删除项目信息
+	serverApi.POST("/del", controller.DelServer)
+	// 修改项目信息
+	serverApi.POST("/edit", controller.EditServer)
+	// 获取项目列表
+	serverApi.POST("/list", controller.GetServerList)
 
 	// 上传文件
 	apiRoutes.POST("/uploadFile", middleware.AuthMiddleware(), controller.UploadFile)

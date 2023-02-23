@@ -82,11 +82,35 @@ func EditProject(c *gin.Context) {
 
 	DB := common.GetDB()
 	var count int64
-	DB.Model(model.Project{}).Count(&count)
+	DB.Model(model.Project{}).Where("id = ?", project.ID).Count(&count)
 	if count <= 0 {
 		response.Fail(c, nil, "修改的项目不存在")
 		return
 	}
 	DB.Updates(&project)
 	response.Success(c, nil, "请求成功")
+}
+
+// GetProjectList 获取所有项目
+func GetProjectList(c *gin.Context) {
+	var project = model.Project{}
+	err := c.BindJSON(&project)
+	if err != nil {
+		log.Println("参数解析失败 -> ", err)
+		response.Fail(c, nil, "参数不正确")
+		return
+	}
+
+	DB := common.GetDB()
+	tx := DB.Model(&model.Project{})
+	var projectList []model.Project
+
+	if project.ProjectName != "" {
+		tx.Where("project_name like ?", "%"+project.ProjectName+"%")
+	}
+	if project.ID != 0 {
+		tx.Where("id = ?", project.ID)
+	}
+	tx.Find(&projectList)
+	response.Success(c, projectList, "请求成功")
 }
