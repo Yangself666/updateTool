@@ -24,6 +24,7 @@ func InitDB() *gorm.DB {
 	db.AutoMigrate(&model.ProjectPath{})
 	db.AutoMigrate(&model.Project{})
 	db.AutoMigrate(&model.Server{})
+	db.AutoMigrate(&model.ProjectServerCon{})
 
 	return db
 }

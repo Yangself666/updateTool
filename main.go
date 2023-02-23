@@ -17,7 +17,7 @@ func main() {
 	common.GetDB()
 
 	// 检查配置中服务器状态
-	CheckServers()
+	//CheckServers()
 
 	r := gin.Default()
 	// 不记录静态文件日志

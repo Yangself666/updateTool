@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
+	"net/http"
 	"strings"
 	"updateTool/common"
 	"updateTool/model"
@@ -48,5 +49,18 @@ func AuthMiddleware() gin.HandlerFunc {
 		c.Set("user", user)
 
 		c.Next()
+	}
+}
+
+// ExposeHeaderMiddleware 前端暴露header设置
+func ExposeHeaderMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Expose-Headers", "Authorization")
+
+		if c.Request.Method == http.MethodOptions {
+			c.AbortWithStatus(200)
+		} else {
+			c.Next()
+		}
 	}
 }

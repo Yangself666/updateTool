@@ -1,6 +1,9 @@
 package model
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+	"reflect"
+)
 
 // 项目路径模型（上传文件白名单）
 
@@ -13,5 +16,9 @@ type ProjectPath struct {
 	// 绝对路径
 	Path string `json:"path" gorm:"type:varchar(500);not null;comment: '绝对路径'"`
 	// 是否包含子路径
-	HasSubPath bool `json:"hasSubPath" gorm:"type:tinyint;not null;default:1;comment: '是否包含子路径 1:包含 0:不包含'"`
+	HasSubPath int `json:"hasSubPath" gorm:"type:int(4);not null;default:1;comment: '是否包含子路径 1:包含 2:不包含'"`
+}
+
+func (projectPath ProjectPath) IsEmpty() bool {
+	return reflect.DeepEqual(projectPath, ProjectPath{})
 }

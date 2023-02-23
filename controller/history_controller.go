@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"log"
 	"strings"
 	"time"
 	"updateTool/common"
@@ -78,12 +79,20 @@ func Rollback(c *gin.Context) {
 
 // GetHistory 获取某生产地址的更新记录
 func GetHistory(c *gin.Context) {
-	remotePath := c.PostForm("remotePath")
-	fileName := c.PostForm("fileName")
+	var param = make(map[string]string, 0)
+	err := c.BindJSON(&param)
+	if err != nil {
+		log.Println("参数接收发生错误 -> ", err)
+		response.Fail(c, nil, "参数不正确")
+		return
+	}
+
+	remotePath := param["remotePath"]
+	fileName := param["fileName"]
 
 	DB := common.GetDB()
 	var histories []model.UpdateHistory
-	if remotePath == "" {
+	if remotePath != "" {
 		DB = DB.Where("remote_path like ?", remotePath+"%")
 	}
 
