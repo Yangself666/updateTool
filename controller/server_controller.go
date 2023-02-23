@@ -31,7 +31,7 @@ func AddServer(c *gin.Context) {
 
 	// 检查host是否添加
 	var count int64
-	DB.Model(model.Server{}).Where("host = ?", server.Host).Count(&count)
+	DB.Model(&model.Server{}).Where("host = ?", server.Host).Count(&count)
 	if count > 0 {
 		response.Fail(c, nil, "该主机地址已存在")
 		return
@@ -64,7 +64,7 @@ func DelServer(c *gin.Context) {
 		return
 	}
 
-	DB.Model(model.Server{}).Delete("id = ?", param["id"])
+	DB.Model(&model.Server{}).Delete("id = ?", param["id"])
 
 	response.Success(c, nil, "删除成功")
 }
@@ -87,7 +87,7 @@ func EditServer(c *gin.Context) {
 	DB := common.GetDB()
 	// 查询是否存在
 	var count int64
-	DB.Model(model.Server{}).Where("id = ?", server.ID).Count(&count)
+	DB.Model(&model.Server{}).Where("id = ?", server.ID).Count(&count)
 	if count <= 0 {
 		response.Fail(c, nil, "修改的服务器不存在")
 		return
@@ -142,8 +142,8 @@ func GetServerListByProjectId(c *gin.Context) {
 		return
 	}
 
-	//DB := common.GetDB()
-	//var serverList []model.Server
+	// DB := common.GetDB()
+	// var serverList []model.Server
 	// todo 查询关联表，连表查询
 
 	response.Success(c, nil, "删除成功")

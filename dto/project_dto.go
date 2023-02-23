@@ -26,3 +26,11 @@ func ProjectDtoToProject(projectDto ProjectDto) model.Project {
 		ProjectIntro: projectDto.ProjectIntro,
 	}
 }
+
+func ToProjectDto(project model.Project) ProjectDto {
+	return ProjectDto{
+		Model:        project.Model,
+		ProjectName:  project.ProjectName,
+		ProjectIntro: project.ProjectIntro,
+	}
+}

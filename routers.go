@@ -37,6 +37,8 @@ func CollectRoute(r *gin.Engine) *gin.Engine {
 	projectApi.POST("/edit", controller.EditProject)
 	// 获取项目列表
 	projectApi.POST("/list", controller.GetProjectList)
+	// 获取单个项目信息
+	projectApi.POST("/info", controller.GetProjectListById)
 
 	// 服务器管理相关接口
 	serverApi := apiRoutes.Group("/server", middleware.AuthMiddleware())
@@ -50,11 +52,11 @@ func CollectRoute(r *gin.Engine) *gin.Engine {
 	serverApi.POST("/list", controller.GetServerList)
 
 	// 上传文件
-	//apiRoutes.POST("/uploadFile", middleware.AuthMiddleware(), controller.UploadFile)
+	// apiRoutes.POST("/uploadFile", middleware.AuthMiddleware(), controller.UploadFile)
 	// 获取上传历史
 	apiRoutes.POST("/getHistory", middleware.AuthMiddleware(), controller.GetHistory)
 	// 回滚
-	//apiRoutes.POST("/rollback", middleware.AuthMiddleware(), controller.Rollback)
+	// apiRoutes.POST("/rollback", middleware.AuthMiddleware(), controller.Rollback)
 	// 重新读取配置文件
 	apiRoutes.GET("/reload", controller.Reload)
 
