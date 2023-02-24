@@ -4,8 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"path"
+	"strings"
 	"updateTool/common"
-	"updateTool/dto"
 	"updateTool/model"
 	"updateTool/response"
 )
@@ -16,84 +16,47 @@ import (
 
 // AddProjectPath 新增项目路径
 func AddProjectPath(c *gin.Context) {
-	var projectDto = dto.ProjectDto{}
-	err := c.BindJSON(&projectDto)
+	var projectPath = model.ProjectPath{}
+	err := c.BindJSON(&projectPath)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return
 	}
 
-	if projectDto.ProjectName == "" {
-		response.Fail(c, nil, "项目名称不能为空")
+	if projectPath.ProjectId == 0 ||
+		projectPath.HasSubPath == 0 ||
+		projectPath.Path == "" ||
+		projectPath.PathName == "" {
+		response.Fail(c, nil, "参数不完整")
 		return
 	}
-	project := dto.ProjectDtoToProject(projectDto)
+	// 路径检查
+	if !strings.HasSuffix(projectPath.Path, "/") {
+		projectPath.Path = projectPath.Path + "/"
+	}
+	projectPath.Path = path.Clean(projectPath.Path)
 
 	DB := common.GetDB()
-	DB.Create(&project)
-
-	// 如果填写了服务器就进行添加操作
-	if projectDto.ServerIdList != nil && len(projectDto.ServerIdList) > 0 {
-		// 查询绑定的服务器
-		var servers []model.Server
-		DB.Model(&model.Server{}).Where("id in ?", projectDto.ServerIdList).Find(&servers)
-
-		// 添加服务器
-		if len(servers) > 0 {
-			cons := make([]model.ProjectServerCon, 0)
-			for _, server := range servers {
-				cons = append(cons, model.ProjectServerCon{ProjectId: project.ID, ServerId: server.ID})
-			}
-			DB.Create(&cons)
-		}
+	var count int64
+	DB.Model(&model.Project{}).Where("id = ?", projectPath.ProjectId).Count(&count)
+	if count <= 0 {
+		response.Fail(c, nil, "该项目不存在")
+		return
 	}
 
-	// 如果填写了服务器路径就进行添加操作
-	if projectDto.ProjectPathList != nil && len(projectDto.ProjectPathList) > 0 {
-		// 去重
-		pathMap := make(map[string]model.ProjectPath)
-		for _, projectPath := range projectDto.ProjectPathList {
-			cleanPath := path.Clean(projectPath.Path)
-			projectPath.Path = cleanPath
-			// 放置项目ID
-			projectPath.ProjectId = project.ID
-			// 放置默认值
-			if projectPath.HasSubPath == 0 {
-				projectPath.HasSubPath = 1
-			}
-			// 说明path不存在
-			if pathMap[cleanPath].IsEmpty() {
-				// 存放路径
-				pathMap[cleanPath] = projectPath
-			}
-		}
-		// 创建新的数组
-		newPathList := make([]model.ProjectPath, 0)
-		for _, value := range pathMap {
-			newPathList = append(newPathList, value)
-		}
-
-		// 保存路径数组
-		DB.Create(&newPathList)
+	// 检查路径是否存在
+	var pathCount int64
+	DB.Model(&model.ProjectPath{}).Where(
+		"project_id = ? and path = ?",
+		projectPath.ProjectId, path.Clean(projectPath.Path)).Count(&pathCount)
+	if pathCount > 0 {
+		response.Fail(c, nil, "该路径已存在")
+		return
 	}
+	// 添加路径
+	DB.Create(&projectPath)
 
-	// 如果填写了用户就进行添加操作
-	if projectDto.UserIdList != nil && len(projectDto.UserIdList) > 0 {
-		// 查询绑定的服务器
-		var users []model.User
-		DB.Model(&model.User{}).Where("id in ?", projectDto.UserIdList).Find(&users)
-
-		// 添加用户
-		if len(users) > 0 {
-			cons := make([]model.ProjectUserCon, 0)
-			for _, user := range users {
-				cons = append(cons, model.ProjectUserCon{ProjectId: project.ID, UserId: user.ID})
-			}
-			DB.Create(&cons)
-		}
-	}
-
-	response.Success(c, nil, "请求成功")
+	response.Success(c, nil, "添加成功")
 }
 
 // DelProjectPath 删除项目路径
@@ -107,131 +70,75 @@ func DelProjectPath(c *gin.Context) {
 	}
 
 	if param["id"] == 0 {
-		response.Fail(c, nil, "项目ID不能为空")
+		response.Fail(c, nil, "项目路径ID不能为空")
 		return
 	}
-	projectId := param["id"]
+	pathId := param["id"]
 
 	DB := common.GetDB()
 	var count int64
-	DB.Model(&model.Project{}).Where("id = ?", projectId).Count(&count)
+	DB.Model(&model.ProjectPath{}).Where("id = ?", pathId).Count(&count)
 	if count <= 0 {
-		response.Fail(c, nil, "该项目不存在")
+		response.Fail(c, nil, "该项目路径不存在")
 		return
 	}
 
-	// 删除关联的服务器
-	DB.Unscoped().Where("project_id = ?", projectId).Delete([]model.ProjectServerCon{})
-
 	// 删除路径的关联
-	DB.Unscoped().Where("project_id = ?", projectId).Delete([]model.ProjectPath{})
-
-	// 删除用户的关联
-	DB.Unscoped().Where("project_id = ?", projectId).Delete([]model.ProjectUserCon{})
-
-	// 删除项目
-	DB.Where("id = ?", projectId).Delete(model.Project{})
+	DB.Unscoped().Where("id = ?", pathId).Delete(model.ProjectPath{})
 
 	response.Success(c, nil, "删除成功")
 }
 
-// EditProjectPath 编辑项目路径
+// EditProjectPath 新增项目路径
 func EditProjectPath(c *gin.Context) {
-	var projectDto = dto.ProjectDto{}
-	err := c.BindJSON(&projectDto)
+	var projectPath = model.ProjectPath{}
+	err := c.BindJSON(&projectPath)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return
 	}
 
-	if projectDto.ProjectName == "" {
-		response.Fail(c, nil, "项目名称不能为空")
+	if projectPath.ID == 0 ||
+		projectPath.ProjectId == 0 ||
+		projectPath.HasSubPath == 0 ||
+		projectPath.Path == "" ||
+		projectPath.PathName == "" {
+		response.Fail(c, nil, "参数不完整")
 		return
 	}
-	if projectDto.ID == 0 {
-		response.Fail(c, nil, "项目ID不能为空")
-		return
+	// 路径检查
+	if !strings.HasSuffix(projectPath.Path, "/") {
+		projectPath.Path = projectPath.Path + "/"
 	}
-	project := dto.ProjectDtoToProject(projectDto)
+	projectPath.Path = path.Clean(projectPath.Path)
 
 	DB := common.GetDB()
 	var count int64
-	DB.Model(&model.Project{}).Where("id = ?", project.ID).Count(&count)
+	// 查询项目路径是否存在
+	DB.Model(&model.ProjectPath{}).Where("id = ?", projectPath.ID).Count(&count)
 	if count <= 0 {
-		response.Fail(c, nil, "修改的项目不存在")
+		response.Fail(c, nil, "该项目路径信息不存在")
 		return
 	}
 
-	// 删除之前绑定的服务器
-	DB.Unscoped().Where("project_id = ?", project.ID).Delete([]model.ProjectServerCon{})
-
-	// 删除之前绑定的路径
-	DB.Unscoped().Where("project_id = ?", project.ID).Delete([]model.ProjectPath{})
-
-	// 删除之前绑定的路径
-	DB.Unscoped().Where("project_id = ?", project.ID).Delete([]model.ProjectUserCon{})
-
-	// 如果填写了服务器就进行添加操作
-	if projectDto.ServerIdList != nil && len(projectDto.ServerIdList) > 0 {
-		// 查询绑定的服务器
-		var servers []model.Server
-		DB.Model(&model.Server{}).Where("id in ?", projectDto.ServerIdList).Find(&servers)
-
-		// 添加服务器
-		if len(servers) > 0 {
-			cons := make([]model.ProjectServerCon, 0)
-			for _, server := range servers {
-				cons = append(cons, model.ProjectServerCon{ProjectId: project.ID, ServerId: server.ID})
-			}
-			DB.Create(&cons)
-		}
+	// 查询项目是否存在
+	DB.Model(&model.Project{}).Where("id = ?", projectPath.ProjectId).Count(&count)
+	if count <= 0 {
+		response.Fail(c, nil, "该项目不存在")
+		return
 	}
 
-	// 如果填写了服务器路径就进行添加操作
-	if projectDto.ProjectPathList != nil && len(projectDto.ProjectPathList) > 0 {
-		// 去重
-		pathMap := make(map[string]model.ProjectPath)
-		for _, projectPath := range projectDto.ProjectPathList {
-			cleanPath := path.Clean(projectPath.Path)
-			projectPath.Path = cleanPath
-			// 放置项目ID
-			projectPath.ProjectId = project.ID
-			// 放置默认值
-			if projectPath.HasSubPath == 0 {
-				projectPath.HasSubPath = 1
-			}
-			// 说明path不存在
-			if pathMap[cleanPath].IsEmpty() {
-				// 存放路径
-				pathMap[cleanPath] = projectPath
-			}
-		}
-		// 创建新的数组
-		newPathList := make([]model.ProjectPath, 0)
-		for _, value := range pathMap {
-			newPathList = append(newPathList, value)
-		}
-
-		// 保存路径数组
-		DB.Create(&newPathList)
+	// 检查路径是否存在
+	var pathCount int64
+	DB.Model(&model.ProjectPath{}).Where(
+		"id <> ? and project_id = ? and path = ?", projectPath.ID,
+		projectPath.ProjectId, path.Clean(projectPath.Path)).Count(&pathCount)
+	if pathCount > 0 {
+		response.Fail(c, nil, "该路径已存在")
+		return
 	}
+	// 添加路径
+	DB.Updates(&projectPath)
 
-	// 如果填写了用户就进行添加操作
-	if projectDto.UserIdList != nil && len(projectDto.UserIdList) > 0 {
-		// 查询绑定的服务器
-		var users []model.User
-		DB.Model(&model.User{}).Where("id in ?", projectDto.UserIdList).Find(&users)
-
-		// 添加用户
-		if len(users) > 0 {
-			cons := make([]model.ProjectUserCon, 0)
-			for _, user := range users {
-				cons = append(cons, model.ProjectUserCon{ProjectId: project.ID, UserId: user.ID})
-			}
-			DB.Create(&cons)
-		}
-	}
-
-	DB.Updates(&project)
-	response.Success(c, nil, "请求成功")
+	response.Success(c, nil, "修改成功")
 }

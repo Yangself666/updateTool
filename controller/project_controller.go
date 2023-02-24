@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"path"
+	"strings"
 	"updateTool/common"
 	"updateTool/dto"
 	"updateTool/model"
@@ -53,6 +54,10 @@ func AddProject(c *gin.Context) {
 		// 去重
 		pathMap := make(map[string]model.ProjectPath)
 		for _, projectPath := range projectDto.ProjectPathList {
+			// 路径检查
+			if !strings.HasSuffix(projectPath.Path, "/") {
+				projectPath.Path = projectPath.Path + "/"
+			}
 			cleanPath := path.Clean(projectPath.Path)
 			projectPath.Path = cleanPath
 			// 放置项目ID
@@ -238,6 +243,10 @@ func EditProject(c *gin.Context) {
 		// 去重
 		pathMap := make(map[string]model.ProjectPath)
 		for _, projectPath := range projectDto.ProjectPathList {
+			// 路径检查
+			if !strings.HasSuffix(projectPath.Path, "/") {
+				projectPath.Path = projectPath.Path + "/"
+			}
 			cleanPath := path.Clean(projectPath.Path)
 			projectPath.Path = cleanPath
 			// 放置项目ID
