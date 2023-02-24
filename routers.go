@@ -38,17 +38,19 @@ func CollectRoute(r *gin.Engine) *gin.Engine {
 	// 获取项目列表
 	projectApi.POST("/list", controller.GetProjectList)
 	// 获取单个项目信息
-	projectApi.POST("/info", controller.GetProjectListById)
+	projectApi.POST("/info", controller.GetProjectById)
+	// 通过项目ID获取路径信息
+	projectApi.POST("/path", controller.GetPathListByProjectId)
 
 	// 服务器管理相关接口
 	serverApi := apiRoutes.Group("/server", middleware.AuthMiddleware())
-	// 添加项目信息
+	// 添加服务器信息
 	serverApi.POST("/add", controller.AddServer)
-	// 删除项目信息
+	// 删除服务器信息
 	serverApi.POST("/del", controller.DelServer)
-	// 修改项目信息
+	// 修改服务器信息
 	serverApi.POST("/edit", controller.EditServer)
-	// 获取项目列表
+	// 获取服务器列表
 	serverApi.POST("/list", controller.GetServerList)
 
 	// 上传文件

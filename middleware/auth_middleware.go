@@ -45,6 +45,8 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
+		// Todo 添加权限校验
+
 		// 用户存在 将user的信息写入上下文
 		c.Set("user", user)
 

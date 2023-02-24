@@ -221,8 +221,8 @@ func GetProjectList(c *gin.Context) {
 	response.Success(c, projectList, "请求成功")
 }
 
-// GetProjectListById 通过ID查询单个项目信息
-func GetProjectListById(c *gin.Context) {
+// GetProjectById 通过ID查询单个项目信息
+func GetProjectById(c *gin.Context) {
 	var param = make(map[string]int, 0)
 	err := c.BindJSON(&param)
 	if err != nil {
@@ -255,8 +255,39 @@ func GetProjectListById(c *gin.Context) {
 
 	// 查询关联服务器
 	var servers []model.Server
-	DB.Model(&model.ProjectServerCon{}).Select("servers.*").Joins("left join servers on servers.id = project_server_cons.server_id").Scan(&servers)
+	DB.Model(&model.ProjectServerCon{}).Select("servers.*").Joins("left join servers on project_server_cons.server_id = servers.id").Where("project_id = ?", projectId).Find(&servers)
 	projectDto.ServerList = servers
 
 	response.Success(c, projectDto, "请求成功")
+}
+
+// GetPathListByProjectId 通过项目ID获取路径列表
+func GetPathListByProjectId(c *gin.Context) {
+	var param = make(map[string]int, 0)
+	err := c.BindJSON(&param)
+	if err != nil {
+		log.Println("参数接收发生错误 -> ", err)
+		response.Fail(c, nil, "参数不正确")
+		return
+	}
+
+	if param["id"] == 0 {
+		response.Fail(c, nil, "项目ID不能为空")
+		return
+	}
+	projectId := param["id"]
+
+	DB := common.GetDB()
+	var count int64
+	DB.Model(&model.Project{}).Where("id = ?", projectId).Count(&count)
+	if count <= 0 {
+		response.Fail(c, nil, "该项目不存在")
+		return
+	}
+
+	// 查询项目下的路径
+	pathList := make([]model.ProjectPath, 0)
+	DB.Model(&model.ProjectPath{}).Where("project_id = ?", projectId).Find(&pathList)
+
+	response.Success(c, pathList, "请求成功")
 }
