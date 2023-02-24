@@ -15,6 +15,10 @@ type ProjectDto struct {
 	ServerIdList []int `json:"serverIdList"`
 	// 项目绑定的服务器信息
 	ServerList []model.Server `json:"serverList"`
+	// 项目绑定的用户ID列表
+	UserIdList []int `json:"userIdList"`
+	// 项目绑定的用户信息列表
+	UserList []model.User `json:"userList"`
 	// 项目绑定的路径信息
 	ProjectPathList []model.ProjectPath `json:"projectPathList"`
 }

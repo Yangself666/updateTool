@@ -11,11 +11,11 @@ import (
 )
 
 /*
-项目管理Controller
+项目路径管理Controller
 */
 
-// AddProject 新增项目
-func AddProject(c *gin.Context) {
+// AddProjectPath 新增项目路径
+func AddProjectPath(c *gin.Context) {
 	var projectDto = dto.ProjectDto{}
 	err := c.BindJSON(&projectDto)
 	if err != nil {
@@ -96,8 +96,8 @@ func AddProject(c *gin.Context) {
 	response.Success(c, nil, "请求成功")
 }
 
-// DelProject 删除项目
-func DelProject(c *gin.Context) {
+// DelProjectPath 删除项目路径
+func DelProjectPath(c *gin.Context) {
 	var param = make(map[string]int, 0)
 	err := c.BindJSON(&param)
 	if err != nil {
@@ -135,54 +135,8 @@ func DelProject(c *gin.Context) {
 	response.Success(c, nil, "删除成功")
 }
 
-// DelCheckProject 删除前检测项目是否可以删除
-func DelCheckProject(c *gin.Context) {
-	var param = make(map[string]int, 0)
-	err := c.BindJSON(&param)
-	if err != nil {
-		log.Println("参数接收发生错误 -> ", err)
-		response.Fail(c, nil, "参数不正确")
-		return
-	}
-
-	if param["id"] == 0 {
-		response.Fail(c, nil, "项目ID不能为空")
-		return
-	}
-	projectId := param["id"]
-
-	DB := common.GetDB()
-	var projectCount int64
-	DB.Model(&model.Project{}).Where("id = ?", projectId).Count(&projectCount)
-	if projectCount <= 0 {
-		response.Fail(c, nil, "该项目不存在")
-		return
-	}
-
-	// 查询项目是否有关联服务器
-	var count int64
-	DB.Model(&model.ProjectServerCon{}).Where("project_id = ?", projectId).Count(&count)
-	if count > 0 {
-		response.Success(c, false, "查询成功")
-		return
-	}
-	// 查询项目是否有关联路径
-	DB.Model(&model.ProjectPath{}).Where("project_id = ?", projectId).Count(&count)
-	if count > 0 {
-		response.Success(c, false, "查询成功")
-		return
-	}
-	// 查询项目是否有关联用户
-	DB.Model(&model.ProjectUserCon{}).Where("project_id = ?", projectId).Count(&count)
-	if count > 0 {
-		response.Success(c, false, "查询成功")
-		return
-	}
-	response.Success(c, true, "查询成功")
-}
-
-// EditProject 编辑项目
-func EditProject(c *gin.Context) {
+// EditProjectPath 编辑项目路径
+func EditProjectPath(c *gin.Context) {
 	var projectDto = dto.ProjectDto{}
 	err := c.BindJSON(&projectDto)
 	if err != nil {
@@ -280,165 +234,4 @@ func EditProject(c *gin.Context) {
 
 	DB.Updates(&project)
 	response.Success(c, nil, "请求成功")
-}
-
-// GetProjectList 获取所有项目
-func GetProjectList(c *gin.Context) {
-	var project = model.Project{}
-	err := c.BindJSON(&project)
-	if err != nil {
-		log.Println("参数解析失败 -> ", err)
-		response.Fail(c, nil, "参数不正确")
-		return
-	}
-
-	DB := common.GetDB()
-	tx := DB.Model(&model.Project{})
-	var projectList []model.Project
-
-	if project.ProjectName != "" {
-		tx.Where("project_name like ?", "%"+project.ProjectName+"%")
-	}
-	if project.ID != 0 {
-		tx.Where("id = ?", project.ID)
-	}
-	tx.Find(&projectList)
-	response.Success(c, projectList, "请求成功")
-}
-
-// GetProjectById 通过ID查询单个项目信息
-func GetProjectById(c *gin.Context) {
-	var param = make(map[string]int, 0)
-	err := c.BindJSON(&param)
-	if err != nil {
-		log.Println("参数接收发生错误 -> ", err)
-		response.Fail(c, nil, "参数不正确")
-		return
-	}
-
-	if param["id"] == 0 {
-		response.Fail(c, nil, "项目ID不能为空")
-		return
-	}
-	projectId := param["id"]
-
-	// 查询项目
-	DB := common.GetDB()
-	var project model.Project
-	DB.Where("id = ?", projectId).First(&project)
-	if project.ID == 0 {
-		// 未查询出项目
-		response.Fail(c, nil, "该项目不存在")
-		return
-	}
-	projectDto := dto.ToProjectDto(project)
-
-	// 查询关联路径
-	paths := make([]model.ProjectPath, 0)
-	DB.Where("project_id = ?", projectId).Find(&paths)
-	projectDto.ProjectPathList = paths
-
-	// 查询关联服务器
-	var servers []model.Server
-	DB.Model(&model.ProjectServerCon{}).Select("servers.*").Joins("left join servers on project_server_cons.server_id = servers.id").Where("project_id = ?", projectId).Find(&servers)
-	projectDto.ServerList = servers
-
-	response.Success(c, projectDto, "请求成功")
-}
-
-// GetPathListByProjectId 通过项目ID获取路径列表
-func GetPathListByProjectId(c *gin.Context) {
-	var param = make(map[string]int, 0)
-	err := c.BindJSON(&param)
-	if err != nil {
-		log.Println("参数接收发生错误 -> ", err)
-		response.Fail(c, nil, "参数不正确")
-		return
-	}
-
-	if param["id"] == 0 {
-		response.Fail(c, nil, "项目ID不能为空")
-		return
-	}
-	projectId := param["id"]
-
-	DB := common.GetDB()
-	var count int64
-	DB.Model(&model.Project{}).Where("id = ?", projectId).Count(&count)
-	if count <= 0 {
-		response.Fail(c, nil, "该项目不存在")
-		return
-	}
-
-	// 查询项目下的路径
-	pathList := make([]model.ProjectPath, 0)
-	DB.Model(&model.ProjectPath{}).Where("project_id = ?", projectId).Find(&pathList)
-
-	response.Success(c, pathList, "请求成功")
-}
-
-// GetProjectListByUserId 通过用户ID获取项目列表(管理员)
-func GetProjectListByUserId(c *gin.Context) {
-	var param = make(map[string]int, 0)
-	err := c.BindJSON(&param)
-	if err != nil {
-		log.Println("参数接收发生错误 -> ", err)
-		response.Fail(c, nil, "参数不正确")
-		return
-	}
-
-	if param["id"] == 0 {
-		response.Fail(c, nil, "用户ID不能为空")
-		return
-	}
-	userId := param["id"]
-	projectDtoList, err := getProjectListByUserIdService(userId)
-	if err != nil {
-		response.Fail(c, nil, err.Error())
-		return
-	}
-	response.Success(c, projectDtoList, "请求成功")
-}
-
-// GetProjectListByLoginUser 获取登陆用户绑定的项目
-func GetProjectListByLoginUser(c *gin.Context) {
-	user, exist := c.Get("user")
-	if !exist {
-		response.Fail(c, nil, "用户未登陆")
-		return
-	}
-	// 断言类型
-	userId := (int)(user.(model.User).ID)
-	projectDtoList, err := getProjectListByUserIdService(userId)
-	if err != nil {
-		response.Fail(c, nil, err.Error())
-		return
-	}
-	response.Success(c, projectDtoList, "请求成功")
-}
-
-// 通过用户ID获取项目列表
-func getProjectListByUserIdService(userId int) ([]dto.ProjectDto, error) {
-	DB := common.GetDB()
-	var count int64
-	DB.Model(&model.User{}).Where("id = ?", userId).Count(&count)
-	if count <= 0 {
-		return nil, common.Error("该用户不存在")
-	}
-
-	// 查询用户绑定的路径
-	projectIds := DB.Select("project_id").Where("user_id = ?", userId).Table("project_user_cons")
-	projectList := make([]model.Project, 0)
-	DB.Model(&model.Project{}).Where("id in (?)", projectIds).Find(&projectList)
-
-	projectDtoList := make([]dto.ProjectDto, 0)
-	for _, project := range projectList {
-		projectDto := dto.ToProjectDto(project)
-		// 查询关联路径
-		paths := make([]model.ProjectPath, 0)
-		DB.Where("project_id = ?", projectDto.ID).Find(&paths)
-		projectDto.ProjectPathList = paths
-		projectDtoList = append(projectDtoList, projectDto)
-	}
-	return projectDtoList, nil
 }

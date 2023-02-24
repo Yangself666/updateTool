@@ -33,6 +33,8 @@ func CollectRoute(r *gin.Engine) *gin.Engine {
 	projectApi.POST("/add", controller.AddProject)
 	// 删除项目信息
 	projectApi.POST("/del", controller.DelProject)
+	// 删除前检测项目是否可以删除
+	projectApi.POST("/delCheck", controller.DelCheckProject)
 	// 修改项目信息
 	projectApi.POST("/edit", controller.EditProject)
 	// 获取项目列表
@@ -41,6 +43,26 @@ func CollectRoute(r *gin.Engine) *gin.Engine {
 	projectApi.POST("/info", controller.GetProjectById)
 	// 通过项目ID获取路径信息
 	projectApi.POST("/path", controller.GetPathListByProjectId)
+	// 通过用户ID获取绑定的项目
+	projectApi.POST("/userId", controller.GetProjectListByUserId)
+	// 获取登陆用户绑定的项目
+	projectApi.POST("/get", controller.GetProjectListByLoginUser)
+
+	// 项目中的用户管理
+	projectUserApi := projectApi.Group("/user", middleware.AuthMiddleware())
+	// 添加用户关联
+	projectUserApi.POST("/add", controller.AddProjectUser)
+	// 删除用户关联
+	projectUserApi.POST("/del", controller.DelProjectUser)
+
+	// 项目中的路径管理
+	projectPathApi := projectApi.Group("/path", middleware.AuthMiddleware())
+	// 添加路径信息
+	projectPathApi.POST("/add", controller.AddProjectPath)
+	// 删除路径信息
+	projectPathApi.POST("/del", controller.DelProjectPath)
+	// 修改路径信息
+	projectPathApi.POST("/edit", controller.EditProjectPath)
 
 	// 服务器管理相关接口
 	serverApi := apiRoutes.Group("/server", middleware.AuthMiddleware())
