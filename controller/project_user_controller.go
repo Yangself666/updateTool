@@ -38,11 +38,20 @@ func AddProjectUser(c *gin.Context) {
 		response.Fail(c, nil, "该项目不存在")
 		return
 	}
-	// 查询用户是否存在
+	// 查询项目是否存在
 	var userCount int64
-	DB.Model(&model.ProjectUserCon{}).Where("project_id = ? and user_id = ?", param.ProjectId, param.UserId).Count(&userCount)
+	DB.Model(&model.User{}).Where("id = ?", param.UserId).Count(&userCount)
 
-	if userCount > 0 {
+	if userCount <= 0 {
+		response.Fail(c, nil, "该用户不存在")
+		return
+	}
+
+	// 查询用户是否已经关联存在
+	var userConCount int64
+	DB.Model(&model.ProjectUserCon{}).Where("project_id = ? and user_id = ?", param.ProjectId, param.UserId).Count(&userConCount)
+
+	if userConCount > 0 {
 		response.Fail(c, nil, "该用户已与项目绑定")
 		return
 	}
