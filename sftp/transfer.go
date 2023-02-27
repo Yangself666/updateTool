@@ -141,7 +141,7 @@ func SendZipFileToServer(server model.Server, localZipFilePath string, remotePat
 	zipReader, err := zip.OpenReader(localZipFilePath)
 	if err != nil {
 		log.Println("zip文件读取失败", err)
-		result <- "zip文件读取失败，错误信息"
+		result <- "zip文件读取失败，错误信息：" + err.Error()
 		return
 	}
 	// 关闭zip包

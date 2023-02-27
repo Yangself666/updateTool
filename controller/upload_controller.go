@@ -144,5 +144,5 @@ func UploadFile(c *gin.Context) {
 	}
 	// 计算处理总时间
 	elapsed := time.Since(start)
-	response.Success(c, resultList, fmt.Sprintf("文件上传成功，总耗时: %v", elapsed))
+	response.Success(c, resultList, fmt.Sprintf("操作成功，总耗时: %v", elapsed))
 }
