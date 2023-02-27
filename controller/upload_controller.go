@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 	"updateTool/common"
@@ -22,29 +23,64 @@ import (
 
 // UploadFile 上传文件接口
 func UploadFile(c *gin.Context) {
-	remotePath := c.PostForm("remotePath")
-	if remotePath == "" {
-		response.Fail(c, nil, "上传文件的远程路径不能为空")
+	projectIdStr := c.PostForm("projectId")
+	pathIdStr := c.PostForm("pathId")
+	if projectIdStr == "" || pathIdStr == "" {
+		response.Fail(c, nil, "参数不完整")
 		return
 	}
-	// 如果远程路径不是以/结尾，添加/
-	if !strings.HasSuffix(remotePath, "/") {
-		remotePath += "/"
-	}
-	enablePath := util.IsEnablePath(remotePath)
-	if !enablePath {
-		response.Fail(c, nil, "远程路径不在白名单，请联系管理员添加")
+	// 项目ID
+	projectId, err := strconv.Atoi(projectIdStr)
+	// 路径ID
+	pathId, err := strconv.Atoi(pathIdStr)
+
+	if err != nil {
+		response.Fail(c, nil, "参数格式不正确")
 		return
 	}
+
 	file, err := c.FormFile("file")
 	if err != nil {
 		log.Println("文件不存在或上传文件时发生错误：", err)
 		response.Fail(c, nil, "文件不存在或上传文件时发生错误")
 		return
 	}
+
+	DB := common.GetDB()
+	// 查询项目是否绑定服务器
+	var count int64
+	DB.Model(&model.ProjectServerCon{}).Where("project_id = ?", projectId).Count(&count)
+	if count <= 0 {
+		response.Fail(c, nil, "该项目未绑定服务器，无法上传")
+		return
+	}
+
+	// 查询项目ID和路径ID关联
+	var projectPath = model.ProjectPath{}
+	DB.Model(&model.ProjectPath{}).Where("project_id = ? and id = ?", projectId, pathId).First(&projectPath)
+
+	if projectPath.ID == 0 {
+		response.Fail(c, nil, "该项目路径不存在，请联系管理员添加")
+		return
+	}
+	// 上传的远程路径
+	remotePath := projectPath.Path
+	// 包含子路径
+	if projectPath.HasSubPath == 1 {
+		subPath := c.PostForm("subPath")
+		if subPath != "" {
+			// 包含子路径，路径拼接
+			remotePath = path.Join(remotePath, subPath)
+		}
+	}
+
+	// 如果远程路径不是以/结尾，添加/
+	if !strings.HasSuffix(remotePath, "/") {
+		remotePath += "/"
+	}
+
 	// 计算处理开始时间
 	start := time.Now()
-
 	// 保留原文件名和文件随机名称和相对路径
 	// 保存到数据库中
 	// 文件生成随机名称uuid
@@ -67,15 +103,18 @@ func UploadFile(c *gin.Context) {
 		return
 	}
 
+	var resultList []string
 	// 传输文件到所有服务器
 	isZipFile := util.FileIsZip(file.Filename)
 	if isZipFile {
 		// 这里进行解压缩的上传
-		err = sftp.SendZipFileToAllServer(
+		resultList, err = sftp.SendZipFileToAllServer(
+			projectId,
 			localFilePath,
 			remotePath)
 	} else {
-		err = sftp.SendFileToAllServer(
+		resultList, err = sftp.SendFileToAllServer(
+			projectId,
 			localFilePath,
 			remotePath,
 			file.Filename)
@@ -85,26 +124,25 @@ func UploadFile(c *gin.Context) {
 		response.Fail(c, nil, err.Error())
 		return
 	}
-
-	// 保存关联关系
-	DB := common.GetDB()
-
+	// todo 添加关联关系
 	history := model.UpdateHistory{
 		Model:          gorm.Model{},
 		RemotePath:     remotePath,
 		LocalPath:      localFilePath,
 		FileName:       file.Filename,
 		UniqueFileName: newUuidName,
+		ProjectId:      uint(projectId),
+		PathId:         uint(pathId),
+		ServerInfo:     util.SliceToString(resultList),
 	}
-
 	// 将上传记录保存到数据库
 	saveHistory := DB.Create(&history)
 	if saveHistory.Error != nil {
 		log.Println("保存上传记录时发生错误：", err)
-		response.Fail(c, nil, "保存上传记录时发生错误")
+		response.Fail(c, resultList, "保存上传记录时发生错误")
 		return
 	}
 	// 计算处理总时间
 	elapsed := time.Since(start)
-	response.Success(c, nil, fmt.Sprintf("上传文件成功，耗时: %v", elapsed))
+	response.Success(c, resultList, fmt.Sprintf("文件上传成功，总耗时: %v", elapsed))
 }

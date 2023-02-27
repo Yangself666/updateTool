@@ -43,9 +43,11 @@ func Rollback(c *gin.Context) {
 	// 传输文件到所有服务器
 	isZipFile := util.FileIsZip(history.FileName)
 	var err error
+	var resultList []string
 	if isZipFile {
 		// 这里进行解压缩的上传
-		err = sftp.SendZipFileToAllServer(
+		resultList, err = sftp.SendZipFileToAllServer(
+			0,
 			history.LocalPath,
 			history.RemotePath)
 	} else {
@@ -59,7 +61,7 @@ func Rollback(c *gin.Context) {
 		return
 	}
 
-	//添加新的记录
+	// 添加新的记录
 
 	otherInfo := fmt.Sprintf("%v回滚至历史记录[%v]", time.Now().Format("2006-01-02 15:04:05"), history.ID)
 	newHistory := model.UpdateHistory{
@@ -74,7 +76,7 @@ func Rollback(c *gin.Context) {
 
 	// 计算处理总时间
 	elapsed := time.Since(start)
-	response.Success(c, nil, fmt.Sprintf("回滚至历史记录[%v]成功，耗时: %v", history.ID, elapsed))
+	response.Success(c, resultList, fmt.Sprintf("回滚至历史记录[%v]成功，耗时: %v", history.ID, elapsed))
 }
 
 // GetHistory 获取某生产地址的更新记录
@@ -96,7 +98,7 @@ func GetHistory(c *gin.Context) {
 		DB = DB.Where("remote_path like ?", remotePath+"%")
 	}
 
-	//如果文件名称不为空，模糊搜索
+	// 如果文件名称不为空，模糊搜索
 	if fileName != "" {
 		DB = DB.Where("file_name like ?", "%"+fileName+"%")
 	}

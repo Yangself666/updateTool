@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"time"
 	"updateTool/common"
+	"updateTool/model"
 	"updateTool/util"
 )
 
@@ -20,58 +21,80 @@ import (
 // remoteFileName	string	远程文件名
 //
 // return			error	返回异常
-func SendFileToAllServer(localFilePath string, remotePath string, remoteFileName string) error {
-	servers := util.GetServers()
+func SendFileToAllServer(projectId int, localFilePath string, remotePath string, remoteFileName string) ([]string, error) {
 	var err error
-	for _, info := range servers {
-		err = SendFileToServer(
-			info.Username,
-			info.Password,
-			info.Host,
-			info.Port,
+	// 获取项目关联的服务器
+	DB := common.GetDB()
+	serverList := make([]model.Server, 0)
+	DB.Model(&model.ProjectServerCon{}).Select("servers.*").Joins("left join servers on project_server_cons.server_id = servers.id").Where("project_server_cons.project_id = ?", projectId).Find(&serverList)
+
+	if serverList == nil || len(serverList) <= 0 {
+		err = common.Error("该项目未绑定服务器，无法上传")
+		return nil, err
+	}
+	// 返回结果集
+	resultList := make([]string, 0)
+	// 循环关联的服务器，进行多协程的传递
+	result := make(chan string)
+	defer close(result)
+	for _, server := range serverList {
+		go SendFileToServer(
+			server,
 			localFilePath,
 			remotePath,
-			remoteFileName)
-		if err != nil {
-			break
-		}
+			remoteFileName,
+			result)
 	}
-	return err
+	for i := 0; i < len(serverList); i++ {
+		// 收集执行结果
+		resultList = append(resultList, <-result)
+	}
+
+	return resultList, nil
 }
 
 // SendZipFileToAllServer 发送压缩文件到所有配置的服务器
+// projectId		int		项目ID
 // localFilePath	string	本地文件路径
 // remotePath		string	远程文件夹路径
 //
 // return			error 	返回异常
-func SendZipFileToAllServer(localFilePath string, remotePath string) error {
-	servers := util.GetServers()
+func SendZipFileToAllServer(projectId int, localFilePath string, remotePath string) ([]string, error) {
 	var err error
-	for _, info := range servers {
-		err := SendZipFileToServer(
-			info.Username,
-			info.Password,
-			info.Host,
-			info.Port,
-			localFilePath,
-			remotePath)
-		if err != nil {
-			break
-		}
+	// 获取项目关联的服务器
+	DB := common.GetDB()
+	serverList := make([]model.Server, 0)
+	DB.Model(&model.ProjectServerCon{}).Select("servers.*").Joins("left join servers on project_server_cons.server_id = servers.id").Where("project_server_cons.project_id = ?", projectId).Find(&serverList)
+
+	if serverList == nil || len(serverList) <= 0 {
+		err = common.Error("该项目未绑定服务器，无法上传")
+		return nil, err
 	}
-	return err
+	// 返回结果集
+	resultList := make([]string, 0)
+	// 循环关联的服务器，进行多协程的传递
+	result := make(chan string)
+	defer close(result)
+	for _, server := range serverList {
+		go SendZipFileToServer(
+			server,
+			localFilePath,
+			remotePath,
+			result)
+	}
+	for i := 0; i < len(serverList); i++ {
+		// 收集执行结果
+		resultList = append(resultList, <-result)
+	}
+	return resultList, nil
 }
 
 // SendZipFileToServer 发送压缩文件到远程服务器
-// user				string	服务器用户名
-// password			string	服务器密码
-// host 			string	服务器主机地址
-// port 			int		服务器端口
-// localZipFilePath	string	本地zip压缩包文件路径
-// remotePath 		string	远程文件夹路径
-//
-// return			error 	返回异常
-func SendZipFileToServer(user string, password string, host string, port int, localZipFilePath string, remotePath string) error {
+// server			model.Server	服务器信息
+// localZipFilePath	string			本地zip压缩包文件路径
+// remotePath 		string			远程文件夹路径
+// result			chan string		结果管道
+func SendZipFileToServer(server model.Server, localZipFilePath string, remotePath string, result chan string) {
 	var (
 		client *sftp.Client
 		err    error
@@ -79,21 +102,25 @@ func SendZipFileToServer(user string, password string, host string, port int, lo
 	// 计算处理开始时间
 	start := time.Now()
 
-	client, err = GetSftpClient(user, password, host, port)
-	if err != nil {
-		log.Println(err)
-		return common.Error(host + " 连接失败")
+	if server.ServerType == 1 {
+		client, err = GetSftpClient(server.Username, server.Password, server.Host, server.Port)
+		if err != nil {
+			log.Println("["+server.ServerName+"("+server.Host+")]连接失败", err)
+			result <- "[" + server.ServerName + "(" + server.Host + ")]连接失败"
+			return
+		}
+		// 创建连接后首先defer进行关闭操作，防止遗忘
+		defer client.Close()
 	}
-	// 创建连接后首先defer进行关闭操作，防止遗忘
-	defer client.Close()
 
 	// 检查远程文件夹状态
 	_, errRemotePath := client.Stat(remotePath)
 	if errRemotePath != nil {
 		errRemotePath = client.MkdirAll(remotePath)
 		if errRemotePath != nil {
-			log.Println("远程文件路径[" + remotePath + "]不存在或权限不足")
-			return common.Error(host + " 远程文件路径[" + remotePath + "]不存在或权限不足")
+			log.Println("[" + server.ServerName + "(" + server.Host + ")]远程文件路径[" + remotePath + "]不存在或权限不足")
+			result <- "[" + server.ServerName + "(" + server.Host + ")]远程文件路径[" + remotePath + "]不存在或权限不足"
+			return
 		}
 	}
 
@@ -101,46 +128,51 @@ func SendZipFileToServer(user string, password string, host string, port int, lo
 	fileInfo, errLocalFilePath := os.Stat(localZipFilePath)
 	if errLocalFilePath != nil {
 		log.Println("本地文件路径["+localZipFilePath+"]不存在或权限不足", errLocalFilePath)
-		return common.Error("本地文件路径[" + localZipFilePath + "]不存在或权限不足")
+		result <- "本地文件路径[" + localZipFilePath + "]不存在或权限不足"
+		return
 	}
 	if fileInfo.IsDir() {
 		log.Println("[" + localZipFilePath + "]文件路径为文件夹，无法上传")
-		return common.Error("[" + localZipFilePath + "]文件路径为文件夹，无法上传")
+		result <- "[" + localZipFilePath + "]文件路径为文件夹，无法上传"
+		return
 	}
 
 	// 路径检查没有问题，开始解压文件传输
 	zipReader, err := zip.OpenReader(localZipFilePath)
 	if err != nil {
 		log.Println("zip文件读取失败", err)
-		return common.Error("zip文件读取失败")
+		result <- "zip文件读取失败，错误信息"
+		return
 	}
 	// 关闭zip包
 	defer zipReader.Close()
 
 	// 遍历文件
 	for _, file := range zipReader.File {
-		uploadZipFile(client, file, remotePath)
+		err := uploadZipFile(client, file, remotePath)
+		if err != nil {
+			log.Println("["+server.ServerName+"("+server.Host+")]上传失败", err)
+			result <- "[" + server.ServerName + "(" + server.Host + ")]上传失败"
+			// 上传结束
+			return
+		}
 	}
 
 	// 计算处理总时间
 	elapsed := time.Since(start)
-	fmt.Println("上传到"+host+"耗时: ", elapsed)
-
+	fmt.Println("[" + server.ServerName + "(" + server.Host + ")]上传成功，耗时：" + elapsed.String())
+	result <- "[" + server.ServerName + "(" + server.Host + ")]上传成功，耗时：" + elapsed.String()
 	// 上传结束
-	return nil
+	return
 }
 
 // SendFileToServer 发送文件到远程服务器
-// user				string	服务器用户名
-// password 		string	服务器密码
-// host				string	服务器主机地址
-// port				int		服务器端口
-// localFilePath	string	本地文件路径
-// remotePath		string	远程文件夹路径
-// remoteFileName	string	远程文件名
-//
-// return			error 	返回异常
-func SendFileToServer(user string, password string, host string, port int, localFilePath string, remotePath string, remoteFileName string) error {
+// server			model.Server	服务器信息
+// localFilePath	string			本地文件路径
+// remotePath		string			远程文件夹路径
+// remoteFileName	string			远程文件名
+// result			chan string		结果管道
+func SendFileToServer(server model.Server, localFilePath string, remotePath string, remoteFileName string, result chan string) {
 	var (
 		client *sftp.Client
 		err    error
@@ -148,21 +180,25 @@ func SendFileToServer(user string, password string, host string, port int, local
 	// 计算处理开始时间
 	start := time.Now()
 
-	client, err = GetSftpClient(user, password, host, port)
-	if err != nil {
-		log.Println(err)
-		return common.Error(host + " 连接失败")
+	if server.ServerType == 1 {
+		client, err = GetSftpClient(server.Username, server.Password, server.Host, server.Port)
+		if err != nil {
+			log.Println("["+server.ServerName+"("+server.Host+")]连接失败", err)
+			result <- "[" + server.ServerName + "(" + server.Host + ")]连接失败"
+			return
+		}
+		// 创建连接后首先defer进行关闭操作，防止遗忘
+		defer client.Close()
 	}
-	// 创建连接后首先defer进行关闭操作，防止遗忘
-	defer client.Close()
 
 	// 检查远程文件夹状态
 	_, errRemotePath := client.Stat(remotePath)
 	if errRemotePath != nil {
 		errRemotePath = client.MkdirAll(remotePath)
 		if errRemotePath != nil {
-			log.Println("远程文件路径[" + remotePath + "]不存在或权限不足")
-			return common.Error(host + " 远程文件路径[" + remotePath + "]不存在或权限不足")
+			log.Println("[" + server.ServerName + "(" + server.Host + ")]远程文件路径[" + remotePath + "]不存在或权限不足")
+			result <- "[" + server.ServerName + "(" + server.Host + ")]远程文件路径[" + remotePath + "]不存在或权限不足"
+			return
 		}
 	}
 
@@ -170,25 +206,30 @@ func SendFileToServer(user string, password string, host string, port int, local
 	fileInfo, errLocalFilePath := os.Stat(localFilePath)
 	if errLocalFilePath != nil {
 		log.Println("本地文件路径["+localFilePath+"]不存在或权限不足", errLocalFilePath)
-		return common.Error("本地文件路径[" + localFilePath + "]不存在或权限不足")
+		result <- "本地文件路径[" + localFilePath + "]不存在或权限不足"
+		return
 	}
 	if fileInfo.IsDir() {
 		log.Println("[" + localFilePath + "]文件路径为文件夹，无法上传")
-		return common.Error("[" + localFilePath + "]文件路径为文件夹，无法上传")
+		result <- "[" + localFilePath + "]文件路径为文件夹，无法上传"
+		return
 	}
 
 	// 路径检查没有问题，开始文件传输
 	err = uploadFile(client, localFilePath, remotePath, remoteFileName)
 	if err != nil {
-		return err
+		log.Println("[" + server.ServerName + "(" + server.Host + ")]上传失败")
+		result <- "[" + server.ServerName + "(" + server.Host + ")]上传失败"
+		// 上传结束
+		return
 	}
 
 	// 计算处理总时间
 	elapsed := time.Since(start)
-	fmt.Println("上传到"+host+"耗时: ", elapsed)
-
+	log.Println("[" + server.ServerName + "(" + server.Host + ")]上传成功，耗时：" + elapsed.String())
+	result <- "[" + server.ServerName + "(" + server.Host + ")]上传成功，耗时：" + elapsed.String()
 	// 上传结束
-	return nil
+	return
 }
 
 // SendDirectoryToServer 发送文件夹到服务器

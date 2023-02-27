@@ -67,3 +67,15 @@ func IsMacUseless(zipFile *zip.File) bool {
 	}
 	return false
 }
+
+// SliceToString 切片转换为字符串
+func SliceToString(resultList []string) string {
+	var result string
+	for i := 0; i < cap(resultList); i++ {
+		result += resultList[i]
+		if i != cap(resultList)-1 {
+			result += "\n"
+		}
+	}
+	return result
+}

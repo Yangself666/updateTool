@@ -16,7 +16,13 @@ func CollectRoute(r *gin.Engine) *gin.Engine {
 	r.NoRoute(func(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/")
 	})
+	r = apiRouter(r)
 
+	return r
+}
+
+// 后台接口
+func apiRouter(r *gin.Engine) *gin.Engine {
 	// 服务接口组
 	apiRoutes := r.Group("/api")
 	// 登陆
@@ -76,11 +82,16 @@ func CollectRoute(r *gin.Engine) *gin.Engine {
 	serverApi.POST("/list", controller.GetServerList)
 
 	// 上传文件
-	// apiRoutes.POST("/uploadFile", middleware.AuthMiddleware(), controller.UploadFile)
+	uploadApi := apiRoutes.Group("/upload", middleware.AuthMiddleware())
+	// 上传文件接口
+	uploadApi.POST("/file", controller.UploadFile)
+
 	// 获取上传历史
-	apiRoutes.POST("/getHistory", middleware.AuthMiddleware(), controller.GetHistory)
+	historyGroup := apiRoutes.Group("/history", middleware.AuthMiddleware())
+	historyGroup.POST("/get", middleware.AuthMiddleware(), controller.GetHistory)
 	// 回滚
-	// apiRoutes.POST("/rollback", middleware.AuthMiddleware(), controller.Rollback)
+	historyGroup.POST("/rollback", controller.Rollback)
+
 	// 重新读取配置文件
 	apiRoutes.GET("/reload", controller.Reload)
 

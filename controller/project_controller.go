@@ -135,7 +135,7 @@ func DelProject(c *gin.Context) {
 	DB.Unscoped().Where("project_id = ?", projectId).Delete([]model.ProjectUserCon{})
 
 	// 删除项目
-	DB.Where("id = ?", projectId).Delete(model.Project{})
+	DB.Where("id = ?", projectId).Delete([]model.Project{})
 
 	response.Success(c, nil, "删除成功")
 }
