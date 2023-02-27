@@ -21,7 +21,7 @@ import (
 // remoteFileName	string	远程文件名
 //
 // return			error	返回异常
-func SendFileToAllServer(projectId int, localFilePath string, remotePath string, remoteFileName string) ([]string, error) {
+func SendFileToAllServer(projectId int, localFilePath string, remotePath string, remoteFileName string) ([]map[string]interface{}, error) {
 	var err error
 	// 获取项目关联的服务器
 	DB := common.GetDB()
@@ -33,9 +33,9 @@ func SendFileToAllServer(projectId int, localFilePath string, remotePath string,
 		return nil, err
 	}
 	// 返回结果集
-	resultList := make([]string, 0)
+	resultList := make([]map[string]interface{}, 0)
 	// 循环关联的服务器，进行多协程的传递
-	result := make(chan string)
+	result := make(chan map[string]interface{})
 	defer close(result)
 	for _, server := range serverList {
 		go SendFileToServer(
@@ -59,7 +59,7 @@ func SendFileToAllServer(projectId int, localFilePath string, remotePath string,
 // remotePath		string	远程文件夹路径
 //
 // return			error 	返回异常
-func SendZipFileToAllServer(projectId int, localFilePath string, remotePath string) ([]string, error) {
+func SendZipFileToAllServer(projectId int, localFilePath string, remotePath string) ([]map[string]interface{}, error) {
 	var err error
 	// 获取项目关联的服务器
 	DB := common.GetDB()
@@ -71,9 +71,9 @@ func SendZipFileToAllServer(projectId int, localFilePath string, remotePath stri
 		return nil, err
 	}
 	// 返回结果集
-	resultList := make([]string, 0)
+	resultList := make([]map[string]interface{}, 0)
 	// 循环关联的服务器，进行多协程的传递
-	result := make(chan string)
+	result := make(chan map[string]interface{})
 	defer close(result)
 	for _, server := range serverList {
 		go SendZipFileToServer(
@@ -94,19 +94,23 @@ func SendZipFileToAllServer(projectId int, localFilePath string, remotePath stri
 // localZipFilePath	string			本地zip压缩包文件路径
 // remotePath 		string			远程文件夹路径
 // result			chan string		结果管道
-func SendZipFileToServer(server model.Server, localZipFilePath string, remotePath string, result chan string) {
+func SendZipFileToServer(server model.Server, localZipFilePath string, remotePath string, result chan map[string]interface{}) {
 	var (
 		client *sftp.Client
 		err    error
 	)
 	// 计算处理开始时间
 	start := time.Now()
+	// 结果map
+	resultMap := make(map[string]interface{}, 0)
+	resultMap["result"] = false
 
 	if server.ServerType == 1 {
 		client, err = GetSftpClient(server.Username, server.Password, server.Host, server.Port)
 		if err != nil {
 			log.Println("["+server.ServerName+"("+server.Host+")]连接失败", err)
-			result <- "[" + server.ServerName + "(" + server.Host + ")]连接失败"
+			resultMap["info"] = "[" + server.ServerName + "(" + server.Host + ")]连接失败"
+			result <- resultMap
 			return
 		}
 		// 创建连接后首先defer进行关闭操作，防止遗忘
@@ -119,7 +123,8 @@ func SendZipFileToServer(server model.Server, localZipFilePath string, remotePat
 		errRemotePath = client.MkdirAll(remotePath)
 		if errRemotePath != nil {
 			log.Println("[" + server.ServerName + "(" + server.Host + ")]远程文件路径[" + remotePath + "]不存在或权限不足")
-			result <- "[" + server.ServerName + "(" + server.Host + ")]远程文件路径[" + remotePath + "]不存在或权限不足"
+			resultMap["info"] = "[" + server.ServerName + "(" + server.Host + ")]远程文件路径[" + remotePath + "]不存在或权限不足"
+			result <- resultMap
 			return
 		}
 	}
@@ -128,12 +133,14 @@ func SendZipFileToServer(server model.Server, localZipFilePath string, remotePat
 	fileInfo, errLocalFilePath := os.Stat(localZipFilePath)
 	if errLocalFilePath != nil {
 		log.Println("本地文件路径["+localZipFilePath+"]不存在或权限不足", errLocalFilePath)
-		result <- "本地文件路径[" + localZipFilePath + "]不存在或权限不足"
+		resultMap["info"] = "本地文件路径[" + localZipFilePath + "]不存在或权限不足"
+		result <- resultMap
 		return
 	}
 	if fileInfo.IsDir() {
 		log.Println("[" + localZipFilePath + "]文件路径为文件夹，无法上传")
-		result <- "[" + localZipFilePath + "]文件路径为文件夹，无法上传"
+		resultMap["info"] = "[" + localZipFilePath + "]文件路径为文件夹，无法上传"
+		result <- resultMap
 		return
 	}
 
@@ -141,7 +148,8 @@ func SendZipFileToServer(server model.Server, localZipFilePath string, remotePat
 	zipReader, err := zip.OpenReader(localZipFilePath)
 	if err != nil {
 		log.Println("zip文件读取失败", err)
-		result <- "zip文件读取失败，错误信息：" + err.Error()
+		resultMap["info"] = "zip文件读取失败，错误信息：" + err.Error()
+		result <- resultMap
 		return
 	}
 	// 关闭zip包
@@ -152,7 +160,8 @@ func SendZipFileToServer(server model.Server, localZipFilePath string, remotePat
 		err := uploadZipFile(client, file, remotePath)
 		if err != nil {
 			log.Println("["+server.ServerName+"("+server.Host+")]上传失败", err)
-			result <- "[" + server.ServerName + "(" + server.Host + ")]上传失败"
+			resultMap["info"] = "[" + server.ServerName + "(" + server.Host + ")]上传失败"
+			result <- resultMap
 			// 上传结束
 			return
 		}
@@ -161,7 +170,9 @@ func SendZipFileToServer(server model.Server, localZipFilePath string, remotePat
 	// 计算处理总时间
 	elapsed := time.Since(start)
 	fmt.Println("[" + server.ServerName + "(" + server.Host + ")]上传成功，耗时：" + elapsed.String())
-	result <- "[" + server.ServerName + "(" + server.Host + ")]上传成功，耗时：" + elapsed.String()
+	resultMap["result"] = true
+	resultMap["info"] = "[" + server.ServerName + "(" + server.Host + ")]上传成功，耗时：" + elapsed.String()
+	result <- resultMap
 	// 上传结束
 	return
 }
@@ -172,7 +183,7 @@ func SendZipFileToServer(server model.Server, localZipFilePath string, remotePat
 // remotePath		string			远程文件夹路径
 // remoteFileName	string			远程文件名
 // result			chan string		结果管道
-func SendFileToServer(server model.Server, localFilePath string, remotePath string, remoteFileName string, result chan string) {
+func SendFileToServer(server model.Server, localFilePath string, remotePath string, remoteFileName string, result chan map[string]interface{}) {
 	var (
 		client *sftp.Client
 		err    error
@@ -180,11 +191,16 @@ func SendFileToServer(server model.Server, localFilePath string, remotePath stri
 	// 计算处理开始时间
 	start := time.Now()
 
+	// 结果map
+	resultMap := make(map[string]interface{}, 0)
+	resultMap["result"] = false
+
 	if server.ServerType == 1 {
 		client, err = GetSftpClient(server.Username, server.Password, server.Host, server.Port)
 		if err != nil {
 			log.Println("["+server.ServerName+"("+server.Host+")]连接失败", err)
-			result <- "[" + server.ServerName + "(" + server.Host + ")]连接失败"
+			resultMap["info"] = "[" + server.ServerName + "(" + server.Host + ")]连接失败"
+			result <- resultMap
 			return
 		}
 		// 创建连接后首先defer进行关闭操作，防止遗忘
@@ -197,7 +213,8 @@ func SendFileToServer(server model.Server, localFilePath string, remotePath stri
 		errRemotePath = client.MkdirAll(remotePath)
 		if errRemotePath != nil {
 			log.Println("[" + server.ServerName + "(" + server.Host + ")]远程文件路径[" + remotePath + "]不存在或权限不足")
-			result <- "[" + server.ServerName + "(" + server.Host + ")]远程文件路径[" + remotePath + "]不存在或权限不足"
+			resultMap["info"] = "[" + server.ServerName + "(" + server.Host + ")]远程文件路径[" + remotePath + "]不存在或权限不足"
+			result <- resultMap
 			return
 		}
 	}
@@ -206,12 +223,14 @@ func SendFileToServer(server model.Server, localFilePath string, remotePath stri
 	fileInfo, errLocalFilePath := os.Stat(localFilePath)
 	if errLocalFilePath != nil {
 		log.Println("本地文件路径["+localFilePath+"]不存在或权限不足", errLocalFilePath)
-		result <- "本地文件路径[" + localFilePath + "]不存在或权限不足"
+		resultMap["info"] = "本地文件路径[" + localFilePath + "]不存在或权限不足"
+		result <- resultMap
 		return
 	}
 	if fileInfo.IsDir() {
 		log.Println("[" + localFilePath + "]文件路径为文件夹，无法上传")
-		result <- "[" + localFilePath + "]文件路径为文件夹，无法上传"
+		resultMap["info"] = "[" + localFilePath + "]文件路径为文件夹，无法上传"
+		result <- resultMap
 		return
 	}
 
@@ -219,7 +238,8 @@ func SendFileToServer(server model.Server, localFilePath string, remotePath stri
 	err = uploadFile(client, localFilePath, remotePath, remoteFileName)
 	if err != nil {
 		log.Println("[" + server.ServerName + "(" + server.Host + ")]上传失败")
-		result <- "[" + server.ServerName + "(" + server.Host + ")]上传失败"
+		resultMap["info"] = "[" + server.ServerName + "(" + server.Host + ")]上传失败"
+		result <- resultMap
 		// 上传结束
 		return
 	}
@@ -227,7 +247,9 @@ func SendFileToServer(server model.Server, localFilePath string, remotePath stri
 	// 计算处理总时间
 	elapsed := time.Since(start)
 	log.Println("[" + server.ServerName + "(" + server.Host + ")]上传成功，耗时：" + elapsed.String())
-	result <- "[" + server.ServerName + "(" + server.Host + ")]上传成功，耗时：" + elapsed.String()
+	resultMap["result"] = true
+	resultMap["info"] = "[" + server.ServerName + "(" + server.Host + ")]上传成功，耗时：" + elapsed.String()
+	result <- resultMap
 	// 上传结束
 	return
 }

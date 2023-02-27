@@ -103,7 +103,7 @@ func UploadFile(c *gin.Context) {
 		return
 	}
 
-	var resultList []string
+	var resultList []map[string]interface{}
 	// 传输文件到所有服务器
 	isZipFile := util.FileIsZip(file.Filename)
 	if isZipFile {
@@ -124,25 +124,31 @@ func UploadFile(c *gin.Context) {
 		response.Fail(c, nil, err.Error())
 		return
 	}
-	// todo 添加关联关系
-	history := model.UpdateHistory{
-		Model:          gorm.Model{},
-		RemotePath:     remotePath,
-		LocalPath:      localFilePath,
-		FileName:       file.Filename,
-		UniqueFileName: newUuidName,
-		ProjectId:      uint(projectId),
-		PathId:         uint(pathId),
-		ServerInfo:     util.SliceToString(resultList),
-	}
-	// 将上传记录保存到数据库
-	saveHistory := DB.Create(&history)
-	if saveHistory.Error != nil {
-		log.Println("保存上传记录时发生错误：", err)
-		response.Fail(c, resultList, "保存上传记录时发生错误")
-		return
-	}
+	resultBool, resultStr := util.UploadResultHandler(resultList)
 	// 计算处理总时间
 	elapsed := time.Since(start)
-	response.Success(c, resultList, fmt.Sprintf("操作成功，总耗时: %v", elapsed))
+	if resultBool {
+		// todo 添加关联关系
+		history := model.UpdateHistory{
+			Model:          gorm.Model{},
+			RemotePath:     remotePath,
+			LocalPath:      localFilePath,
+			FileName:       file.Filename,
+			UniqueFileName: newUuidName,
+			ProjectId:      uint(projectId),
+			PathId:         uint(pathId),
+			ServerInfo:     resultStr,
+		}
+		// 将上传记录保存到数据库
+		saveHistory := DB.Create(&history)
+		if saveHistory.Error != nil {
+			log.Println("保存上传记录时发生错误：", err)
+			response.Success(c, resultStr, fmt.Sprintf("操作成功，但保存上传记录时发生错误，总耗时: %v", elapsed))
+			return
+		}
+		response.Success(c, resultStr, fmt.Sprintf("操作成功，总耗时: %v", elapsed))
+		return
+	}
+
+	response.Fail(c, resultStr, fmt.Sprintf("所有服务器上传失败，总耗时: %v", elapsed))
 }

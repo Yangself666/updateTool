@@ -71,11 +71,35 @@ func IsMacUseless(zipFile *zip.File) bool {
 // SliceToString 切片转换为字符串
 func SliceToString(resultList []string) string {
 	var result string
-	for i := 0; i < cap(resultList); i++ {
+	for i := 0; i < len(resultList); i++ {
 		result += resultList[i]
-		if i != cap(resultList)-1 {
+		if i != len(resultList)-1 {
 			result += "\n"
 		}
 	}
 	return result
+}
+
+// UploadResultHandler 上传结果解析
+func UploadResultHandler(resultMapList []map[string]interface{}) (bool, string) {
+	// 全为false为失败，不记录日志
+	// 有true为成功，记录日志
+	totalResult := false
+	var resultStr string
+	for i := 0; i < len(resultMapList); i++ {
+		resultMap := resultMapList[i]
+		var flagStr string
+		if resultMap["result"].(bool) {
+			// 有一个成功就成功
+			totalResult = true
+			flagStr = "【成功】"
+		} else {
+			flagStr = "【失败】"
+		}
+		resultStr += flagStr + resultMap["info"].(string)
+		if i != len(resultMapList)-1 {
+			resultStr += "\n"
+		}
+	}
+	return totalResult, resultStr
 }

@@ -43,7 +43,7 @@ func Rollback(c *gin.Context) {
 	// 传输文件到所有服务器
 	isZipFile := util.FileIsZip(history.FileName)
 	var err error
-	var resultList []string
+	var resultList []map[string]interface{}
 	if isZipFile {
 		// 这里进行解压缩的上传
 		resultList, err = sftp.SendZipFileToAllServer(
