@@ -51,7 +51,8 @@ func Rollback(c *gin.Context) {
 			history.LocalPath,
 			history.RemotePath)
 	} else {
-		err = sftp.SendFileToAllServer(
+		resultList, err = sftp.SendFileToAllServer(
+			0,
 			history.LocalPath,
 			history.RemotePath,
 			history.FileName)
