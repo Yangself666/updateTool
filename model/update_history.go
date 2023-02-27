@@ -5,6 +5,8 @@ import "gorm.io/gorm"
 // UpdateHistory 更新历史
 type UpdateHistory struct {
 	gorm.Model
+	// 操作用户ID
+	UserId uint `json:"userId" gorm:"type:int;not null;default:0;comment: '操作用户ID'"`
 	// 上传的远程路径
 	RemotePath string `json:"remotePath" gorm:"type:varchar(500);not null;comment: '上传的远程路径'"`
 	// 本地存储路径

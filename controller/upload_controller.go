@@ -127,9 +127,15 @@ func UploadFile(c *gin.Context) {
 	resultBool, resultStr := util.UploadResultHandler(resultList)
 	// 计算处理总时间
 	elapsed := time.Since(start)
+	var userId uint
+	user, exists := c.Get("user")
+	if exists {
+		userId = user.(model.User).ID
+	}
 	if resultBool {
 		// todo 添加关联关系
 		history := model.UpdateHistory{
+			UserId:         userId,
 			Model:          gorm.Model{},
 			RemotePath:     remotePath,
 			LocalPath:      localFilePath,

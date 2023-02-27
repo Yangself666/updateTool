@@ -3,7 +3,6 @@ package controller
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"log"
 	"strings"
 	"time"
 	"updateTool/common"
@@ -82,26 +81,40 @@ func Rollback(c *gin.Context) {
 
 // GetHistory 获取某生产地址的更新记录
 func GetHistory(c *gin.Context) {
-	var param = make(map[string]string, 0)
-	err := c.BindJSON(&param)
+	var updateHistory = model.UpdateHistory{}
+	err := c.BindJSON(&updateHistory)
 	if err != nil {
-		log.Println("参数接收发生错误 -> ", err)
 		response.Fail(c, nil, "参数不正确")
 		return
 	}
 
-	remotePath := param["remotePath"]
-	fileName := param["fileName"]
+	remotePath := updateHistory.RemotePath
+	fileName := updateHistory.FileName
+	id := updateHistory.ID
+	projectId := updateHistory.ProjectId
+	pathId := updateHistory.PathId
 
 	DB := common.GetDB()
 	var histories []model.UpdateHistory
+	// 查询路径不为空
 	if remotePath != "" {
 		DB = DB.Where("remote_path like ?", remotePath+"%")
 	}
-
 	// 如果文件名称不为空，模糊搜索
 	if fileName != "" {
 		DB = DB.Where("file_name like ?", "%"+fileName+"%")
+	}
+	// 如果历史ID不为空
+	if id != 0 {
+		DB = DB.Where("id = ?", id)
+	}
+	// 如果项目ID不为空
+	if projectId != 0 {
+		DB = DB.Where("project_id = ?", projectId)
+	}
+	// 如果路径ID不为空
+	if pathId != 0 {
+		DB = DB.Where("path_id = ?", pathId)
 	}
 	DB.Order("updated_at desc").Find(&histories)
 	response.Success(c, histories, "请求成功")
