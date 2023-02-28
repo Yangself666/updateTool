@@ -30,23 +30,6 @@ func GetServers() []model.ServerInfo {
 	return serverList
 }
 
-// IsEnablePath 检测路径是否可以上传
-func IsEnablePath(remotePath string) bool {
-	// 获取白名单路径
-	slice := viper.GetStringSlice("enable-path")
-	result := false
-	for _, str := range slice {
-		if !strings.HasSuffix(str, "/") {
-			str += "/"
-		}
-		if strings.HasPrefix(remotePath, str) {
-			result = true
-			break
-		}
-	}
-	return result
-}
-
 // FileIsZip 检查文件是否为Zip压缩包
 func FileIsZip(fileName string) bool {
 	split := strings.Split(fileName, ".")

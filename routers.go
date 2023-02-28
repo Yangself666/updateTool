@@ -102,7 +102,7 @@ func apiRouter(r *gin.Engine) *gin.Engine {
 	historyGroup := apiRoutes.Group("/history", middleware.AuthMiddleware())
 	historyGroup.POST("/get", controller.GetHistory)
 	// 回滚
-	// historyGroup.POST("/rollback", controller.Rollback)
+	historyGroup.POST("/rollback", controller.Rollback)
 
 	// 重新读取配置文件
 	apiRoutes.GET("/reload", controller.Reload)
