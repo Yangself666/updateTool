@@ -13,7 +13,7 @@ import (
 	"updateTool/common"
 	"updateTool/model"
 	"updateTool/response"
-	"updateTool/sftp"
+	"updateTool/sftp_util"
 	"updateTool/util"
 )
 
@@ -108,12 +108,12 @@ func UploadFile(c *gin.Context) {
 	isZipFile := util.FileIsZip(file.Filename)
 	if isZipFile {
 		// 这里进行解压缩的上传
-		resultList, err = sftp.SendZipFileToAllServer(
+		resultList, err = sftp_util.SendZipFileToAllServer(
 			projectId,
 			localFilePath,
 			remotePath)
 	} else {
-		resultList, err = sftp.SendFileToAllServer(
+		resultList, err = sftp_util.SendFileToAllServer(
 			projectId,
 			localFilePath,
 			remotePath,

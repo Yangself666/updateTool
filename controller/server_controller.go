@@ -2,12 +2,12 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/sftp"
 	"log"
 	"updateTool/common"
 	"updateTool/model"
 	"updateTool/response"
-	"updateTool/sftp"
-	"updateTool/util"
+	"updateTool/sftp_util"
 )
 
 /*
@@ -132,40 +132,39 @@ func GetServerList(c *gin.Context) {
 	response.Success(c, serverList, "请求成功")
 }
 
-// GetServerListByProjectId 根据项目ID获取服务器列表
-func GetServerListByProjectId(c *gin.Context) {
-	var param = make(map[string]int, 0)
-	err := c.BindJSON(&param)
-	if err != nil {
-		log.Println("参数接收发生错误 -> ", err)
-		response.Fail(c, nil, "参数不正确")
+// CheckServer 检查server是否可用
+func CheckServer(c *gin.Context) {
+	var server model.Server
+	c.BindJSON(&server)
+
+	if server.ID == 0 {
+		response.Fail(c, nil, "参数不完整")
 		return
 	}
 
-	if param["projectId"] == 0 {
-		response.Fail(c, nil, "项目ID不能为空")
+	DB := common.GetDB()
+	var serverResult model.Server
+	DB.Model(&model.Server{}).Where("id = ?", server.ID).First(&serverResult)
+	if serverResult.ID == 0 {
+		response.Fail(c, nil, "该服务器不存在")
 		return
 	}
 
-	// DB := common.GetDB()
-	// var serverList []model.Server
-	// todo 查询关联表，连表查询
+	var (
+		client *sftp.Client
+		err    error
+	)
 
-	response.Success(c, nil, "删除成功")
-}
-
-// CheckServers 检查server是否可用
-func CheckServers() {
-	var serverStr string
-	servers := util.GetServers()
-	for _, item := range servers {
-		client, err := sftp.GetSftpClient(item.Username, item.Password, item.Host, item.Port)
+	// 密码类型
+	if serverResult.ServerType == 1 {
+		client, err = sftp_util.GetSftpClient(serverResult.Username, serverResult.Password, serverResult.Host, serverResult.Port)
 		if err != nil {
-			panic(item.Host + " 无法连接，请检查该服务器的参数及配置")
+			response.Fail(c, nil, "该服务器无法连接，请检查该服务器的参数及配置")
+			return
 		}
 		// 创建连接后首先defer进行关闭操作，防止遗忘
-		client.Close()
-		serverStr += item.Host + " "
+		defer client.Close()
 	}
-	log.Println("所有服务器配置检查通过 [ " + serverStr + "]")
+
+	response.Success(c, nil, "服务器连接成功")
 }

@@ -8,7 +8,7 @@ import (
 	"updateTool/common"
 	"updateTool/model"
 	"updateTool/response"
-	"updateTool/sftp"
+	"updateTool/sftp_util"
 	"updateTool/util"
 )
 
@@ -45,12 +45,12 @@ func Rollback(c *gin.Context) {
 	var resultList []map[string]interface{}
 	if isZipFile {
 		// 这里进行解压缩的上传
-		resultList, err = sftp.SendZipFileToAllServer(
+		resultList, err = sftp_util.SendZipFileToAllServer(
 			0,
 			history.LocalPath,
 			history.RemotePath)
 	} else {
-		resultList, err = sftp.SendFileToAllServer(
+		resultList, err = sftp_util.SendFileToAllServer(
 			0,
 			history.LocalPath,
 			history.RemotePath,

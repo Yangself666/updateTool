@@ -1,4 +1,4 @@
-package sftp
+package sftp_util
 
 import (
 	"fmt"
@@ -26,14 +26,14 @@ func GetSftpClient(user string, password string, host string, port int) (*sftp.C
 		User:            user,
 		Auth:            auth,
 		Timeout:         30 * time.Second,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(), //ssh.FixedHostKey(hostKey),
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // ssh.FixedHostKey(hostKey),
 	}
 	// connect to ssh
 	addr = fmt.Sprintf("%s:%d", host, port)
 	if sshClient, err = ssh.Dial("tcp", addr, clientConfig); err != nil {
 		return nil, err
 	}
-	// create sftp client
+	// create sftp_util client
 	if sftpClient, err = sftp.NewClient(sshClient); err != nil {
 		return nil, err
 	}

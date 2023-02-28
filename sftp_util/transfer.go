@@ -1,4 +1,4 @@
-package sftp
+package sftp_util
 
 import (
 	"archive/zip"
@@ -307,7 +307,7 @@ func SendDirectoryToServer(user string, password string, host string, port int, 
 }
 
 // uploadDirectory	上传文件夹
-// client		*sftp.Client	服务器连接后的client指针
+// client		*sftp_util.Client	服务器连接后的client指针
 // localPath	string			本地文件夹路径
 // remotePath	string			远程文件夹路径
 //
@@ -332,7 +332,7 @@ func uploadDirectory(client *sftp.Client, localPath string, remotePath string) e
 }
 
 // uploadFile	上传单个文件
-// client			*sftp.Client	服务器连接后的client指针
+// client			*sftp_util.Client	服务器连接后的client指针
 // localFilePath	string			本地文件路径
 // remotePath		string			远程文件夹路径
 // remoteFileName	string			远程文件名
@@ -375,7 +375,7 @@ func uploadFile(client *sftp.Client, localFilePath string, remotePath string, re
 
 // 上传Zip文件
 // uploadZipFile	上传zip压缩文件
-// client		*sftp.Client	服务器连接后的client指针
+// client		*sftp_util.Client	服务器连接后的client指针
 // zipFile		*zip.File		zip包中遍历的File指针
 // remotePath	string			远程文件夹路径
 //

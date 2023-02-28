@@ -90,6 +90,8 @@ func apiRouter(r *gin.Engine) *gin.Engine {
 	serverApi.POST("/edit", controller.EditServer)
 	// 获取服务器列表
 	serverApi.POST("/list", controller.GetServerList)
+	// 检查服务器是否可以连接
+	serverApi.POST("/check", controller.CheckServer)
 
 	// 上传文件
 	uploadApi := apiRoutes.Group("/upload", middleware.AuthMiddleware())
