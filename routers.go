@@ -32,9 +32,15 @@ func apiRouter(r *gin.Engine) *gin.Engine {
 	userApi := apiRoutes.Group("/user", middleware.AuthMiddleware())
 	// 登陆用户获取信息
 	userApi.POST("/info", controller.Info)
+	// 添加用户
 	userApi.POST("/add", controller.AddUser)
+	// 编辑用户信息
 	userApi.POST("/edit", controller.EditUser)
+	// 修改用户密码
+	userApi.POST("/editPassword", controller.EditUserPassword)
+	// 删除用户及其关联
 	userApi.POST("/del", controller.DelUser)
+	// 获取所有用户列表
 	userApi.POST("/list", controller.ListUser)
 
 	// 项目管理相关接口

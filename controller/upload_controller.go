@@ -133,7 +133,7 @@ func UploadFile(c *gin.Context) {
 		userId = user.(model.User).ID
 	}
 	if resultBool {
-		// todo 添加关联关系
+		// 添加关联关系
 		history := model.UpdateHistory{
 			UserId:         userId,
 			Model:          gorm.Model{},

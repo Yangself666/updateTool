@@ -97,14 +97,8 @@ func EditUser(c *gin.Context) {
 	c.BindJSON(&user)
 
 	// 检查参数是否传递
-	if user.ID == 0 || user.Name == "" || user.Email == "" || user.Password == "" {
+	if user.ID == 0 || user.Name == "" || user.Email == "" {
 		response.Fail(c, nil, "参数不完整")
-		return
-	}
-
-	// 检查密码位数
-	if len(user.Password) < 6 {
-		response.Fail(c, nil, "密码需要大于等于6位")
 		return
 	}
 
@@ -118,6 +112,38 @@ func EditUser(c *gin.Context) {
 	}
 
 	// 修改用户
+	DB.Model(&model.User{}).Select("name", "email").Where("id = ?", user.ID).Updates(&user)
+
+	response.Success(c, nil, "修改成功")
+}
+
+// EditUserPassword 修改用户密码
+func EditUserPassword(c *gin.Context) {
+	var user = model.User{}
+	c.BindJSON(&user)
+
+	// 检查参数是否传递
+	if user.ID == 0 || user.Password == "" {
+		response.Fail(c, nil, "参数不完整")
+		return
+	}
+
+	// 检查密码位数
+	if len(user.Password) < 6 {
+		response.Fail(c, nil, "密码需要大于等于6位")
+		return
+	}
+
+	// 检查用户是否存在
+	DB := common.GetDB()
+	var count int64
+	DB.Model(&model.User{}).Where("id = ?", user.ID).Count(&count)
+	if count <= 0 {
+		response.Fail(c, nil, "该用户不存在")
+		return
+	}
+
+	// 修改用户密码
 	hashPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		response.Fail(c, nil, "密码加密错误，添加失败")
@@ -126,8 +152,8 @@ func EditUser(c *gin.Context) {
 	// 设置密码
 	user.Password = string(hashPassword)
 
-	// 添加用户
-	DB.Updates(&user)
+	// 修改密码
+	DB.Model(&model.User{}).Select("password").Where("id = ?", user.ID).Updates(&user)
 
 	response.Success(c, nil, "修改成功")
 }

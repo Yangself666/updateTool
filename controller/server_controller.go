@@ -6,6 +6,8 @@ import (
 	"updateTool/common"
 	"updateTool/model"
 	"updateTool/response"
+	"updateTool/sftp"
+	"updateTool/util"
 )
 
 /*
@@ -150,4 +152,20 @@ func GetServerListByProjectId(c *gin.Context) {
 	// todo 查询关联表，连表查询
 
 	response.Success(c, nil, "删除成功")
+}
+
+// CheckServers 检查server是否可用
+func CheckServers() {
+	var serverStr string
+	servers := util.GetServers()
+	for _, item := range servers {
+		client, err := sftp.GetSftpClient(item.Username, item.Password, item.Host, item.Port)
+		if err != nil {
+			panic(item.Host + " 无法连接，请检查该服务器的参数及配置")
+		}
+		// 创建连接后首先defer进行关闭操作，防止遗忘
+		client.Close()
+		serverStr += item.Host + " "
+	}
+	log.Println("所有服务器配置检查通过 [ " + serverStr + "]")
 }
