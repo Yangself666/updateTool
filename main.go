@@ -17,11 +17,11 @@ func main() {
 	common.GetDB()
 
 	// 检查配置中服务器状态
-	//CheckServers()
+	// CheckServers()
 
 	r := gin.Default()
 	// 不记录静态文件日志
-	gin.LoggerWithWriter(gin.DefaultWriter, "/static")
+	gin.LoggerWithWriter(gin.DefaultWriter, "/assets/*")
 	// 加载路由
 	r = CollectRoute(r)
 

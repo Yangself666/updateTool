@@ -11,7 +11,7 @@ func CollectRoute(r *gin.Engine) *gin.Engine {
 	r.Use(middleware.CORSMiddleware())
 	// 静态文件路由
 	r.StaticFile("/", "resource/web/index.html")
-	r.Static("/static", "resource/web/static")
+	r.Static("/assets", "resource/web/assets")
 	// 解决vue等前端路由问题（gin路由不存在返回首页）
 	r.NoRoute(func(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/")
@@ -32,6 +32,10 @@ func apiRouter(r *gin.Engine) *gin.Engine {
 	userApi := apiRoutes.Group("/user", middleware.AuthMiddleware())
 	// 登陆用户获取信息
 	userApi.POST("/info", controller.Info)
+	userApi.POST("/add", controller.AddUser)
+	userApi.POST("/edit", controller.EditUser)
+	userApi.POST("/del", controller.DelUser)
+	userApi.POST("/list", controller.ListUser)
 
 	// 项目管理相关接口
 	projectApi := apiRoutes.Group("/project", middleware.AuthMiddleware())
@@ -88,9 +92,9 @@ func apiRouter(r *gin.Engine) *gin.Engine {
 
 	// 获取上传历史
 	historyGroup := apiRoutes.Group("/history", middleware.AuthMiddleware())
-	historyGroup.POST("/get", middleware.AuthMiddleware(), controller.GetHistory)
+	historyGroup.POST("/get", controller.GetHistory)
 	// 回滚
-	historyGroup.POST("/rollback", controller.Rollback)
+	// historyGroup.POST("/rollback", controller.Rollback)
 
 	// 重新读取配置文件
 	apiRoutes.GET("/reload", controller.Reload)

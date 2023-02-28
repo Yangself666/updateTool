@@ -63,7 +63,10 @@ func DelServer(c *gin.Context) {
 		response.Fail(c, nil, "该服务器不存在")
 		return
 	}
+	// 删除项目与服务器关联
+	DB.Unscoped().Model(&model.ProjectServerCon{}).Delete("server_id = ?", param["id"])
 
+	// 删除服务器
 	DB.Model(&model.Server{}).Delete("id = ?", param["id"])
 
 	response.Success(c, nil, "删除成功")

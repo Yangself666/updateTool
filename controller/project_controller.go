@@ -303,7 +303,7 @@ func GetProjectList(c *gin.Context) {
 
 	DB := common.GetDB()
 	tx := DB.Model(&model.Project{})
-	var projectList []model.Project
+	var projectList = make([]model.Project, 0)
 
 	if project.ProjectName != "" {
 		tx.Where("project_name like ?", "%"+project.ProjectName+"%")

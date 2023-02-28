@@ -18,10 +18,10 @@ import (
 func Login(c *gin.Context) {
 	// 获取登陆参数中的邮件地址和密码
 	// 获取json
-	param := make(map[string]string)
-	c.BindJSON(&param)
-	email := param["email"]
-	password := param["password"]
+	var user = model.User{}
+	c.BindJSON(&user)
+	email := user.Email
+	password := user.Password
 
 	// 检查参数是否传递
 	if email == "" || password == "" {

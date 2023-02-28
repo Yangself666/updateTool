@@ -3,6 +3,7 @@ package dto
 import "updateTool/model"
 
 type UserDto struct {
+	ID uint
 	// 用户名
 	Name string `json:"name"`
 	// 用户登陆邮箱
