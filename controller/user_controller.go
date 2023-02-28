@@ -22,7 +22,11 @@ func Info(c *gin.Context) {
 // ListUser 获取用户列表
 func ListUser(c *gin.Context) {
 	var user = model.User{}
-	c.BindJSON(&user)
+	err := c.BindJSON(&user)
+	if err != nil {
+		response.Fail(c, nil, "参数不正确")
+		return
+	}
 	id := user.ID
 	name := user.Name
 	email := user.Email
@@ -49,7 +53,11 @@ func ListUser(c *gin.Context) {
 // AddUser 添加用户
 func AddUser(c *gin.Context) {
 	var user = model.User{}
-	c.BindJSON(&user)
+	err := c.BindJSON(&user)
+	if err != nil {
+		response.Fail(c, nil, "参数不正确")
+		return
+	}
 	name := user.Name
 	email := user.Email
 	password := user.Password
@@ -94,7 +102,11 @@ func AddUser(c *gin.Context) {
 // EditUser 修改用户
 func EditUser(c *gin.Context) {
 	var user = model.User{}
-	c.BindJSON(&user)
+	err := c.BindJSON(&user)
+	if err != nil {
+		response.Fail(c, nil, "参数不正确")
+		return
+	}
 
 	// 检查参数是否传递
 	if user.ID == 0 || user.Name == "" || user.Email == "" {
@@ -120,7 +132,11 @@ func EditUser(c *gin.Context) {
 // EditUserPassword 修改用户密码
 func EditUserPassword(c *gin.Context) {
 	var user = model.User{}
-	c.BindJSON(&user)
+	err := c.BindJSON(&user)
+	if err != nil {
+		response.Fail(c, nil, "参数不正确")
+		return
+	}
 
 	// 检查参数是否传递
 	if user.ID == 0 || user.Password == "" {
@@ -161,7 +177,11 @@ func EditUserPassword(c *gin.Context) {
 // DelUser 删除用户
 func DelUser(c *gin.Context) {
 	var user = model.User{}
-	c.BindJSON(&user)
+	err := c.BindJSON(&user)
+	if err != nil {
+		response.Fail(c, nil, "参数不正确")
+		return
+	}
 
 	// 检查参数是否传递
 	if user.ID == 0 {

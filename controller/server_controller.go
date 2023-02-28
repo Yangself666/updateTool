@@ -134,8 +134,16 @@ func GetServerList(c *gin.Context) {
 
 // CheckServer 检查server是否可用
 func CheckServer(c *gin.Context) {
-	var server model.Server
-	c.BindJSON(&server)
+	var (
+		server model.Server
+		client *sftp.Client
+		err    error
+	)
+	err = c.BindJSON(&server)
+	if err != nil {
+		response.Fail(c, nil, "参数不正确")
+		return
+	}
 
 	if server.ID == 0 {
 		response.Fail(c, nil, "参数不完整")
@@ -149,11 +157,6 @@ func CheckServer(c *gin.Context) {
 		response.Fail(c, nil, "该服务器不存在")
 		return
 	}
-
-	var (
-		client *sftp.Client
-		err    error
-	)
 
 	// 密码类型
 	if serverResult.ServerType == 1 {

@@ -3,6 +3,7 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	"updateTool/common"
+	"updateTool/dto"
 	"updateTool/model"
 	"updateTool/response"
 )
@@ -111,7 +112,11 @@ func EditProjectUser(c *gin.Context) {
 		UserIdList []uint
 	}
 	param := Param{}
-	c.BindJSON(&param)
+	err := c.BindJSON(&param)
+	if err != nil {
+		response.Fail(c, nil, "参数不正确")
+		return
+	}
 
 	if param.ProjectId == 0 {
 		response.Fail(c, nil, "参数不正确")
@@ -142,5 +147,38 @@ func EditProjectUser(c *gin.Context) {
 			DB.Create(&cons)
 		}
 	}
-	response.Fail(c, nil, "请求成功")
+	response.Success(c, nil, "请求成功")
+}
+
+// GetUserListByProjectId 通过项目ID获取用户列表
+func GetUserListByProjectId(c *gin.Context) {
+	var project model.Project
+	err := c.BindJSON(&project)
+	if err != nil {
+		response.Fail(c, nil, "参数不正确")
+		return
+	}
+	if project.ID == 0 {
+		response.Fail(c, nil, "参数不完整")
+		return
+	}
+
+	DB := common.GetDB()
+	var projectCount int64
+	// 查询项目是否存在
+	DB.Model(&model.Project{}).Where("id = ?", project.ID).Count(&projectCount)
+	if projectCount <= 0 {
+		response.Fail(c, nil, "该项目不存在")
+		return
+	}
+
+	// 查询项目绑定用户信息
+	userList := make([]model.User, 0)
+	DB.Select("users.*").Model(&model.ProjectUserCon{}).Joins("left join users on project_user_cons.user_id = users.id").Where("project_user_cons.project_id = ?", project.ID).Find(&userList)
+	userListDto := make([]dto.UserDto, 0)
+	for _, user := range userList {
+		userDto := dto.ToUserDto(user)
+		userListDto = append(userListDto, userDto)
+	}
+	response.Success(c, userListDto, "请求成功")
 }

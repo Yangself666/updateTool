@@ -72,6 +72,8 @@ func apiRouter(r *gin.Engine) *gin.Engine {
 	projectUserApi.POST("/del", controller.DelProjectUser)
 	// 批量编辑用户关联
 	projectUserApi.POST("/edit", controller.EditProjectUser)
+	// 获取项目中的用户列表
+	projectUserApi.POST("/list", controller.GetUserListByProjectId)
 
 	// 项目中的路径管理
 	projectPathApi := projectApi.Group("/path", middleware.AuthMiddleware())

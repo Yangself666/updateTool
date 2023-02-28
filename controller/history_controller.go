@@ -17,7 +17,11 @@ import (
 // Rollback 恢复某一备份到生产
 func Rollback(c *gin.Context) {
 	param := make(map[string]int)
-	c.BindJSON(&param)
+	err := c.BindJSON(&param)
+	if err != nil {
+		response.Fail(c, nil, "参数不正确")
+		return
+	}
 	rollbackId := param["id"]
 	if rollbackId == 0 {
 		response.Fail(c, nil, "回滚的记录ID不能为空")
@@ -60,7 +64,6 @@ func Rollback(c *gin.Context) {
 	// 开始回滚，上传文件
 	// 传输文件到所有服务器
 	isZipFile := util.FileIsZip(history.FileName)
-	var err error
 	var resultList []map[string]interface{}
 	if isZipFile {
 		// 这里进行解压缩的上传
