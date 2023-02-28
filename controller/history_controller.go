@@ -53,7 +53,7 @@ func Rollback(c *gin.Context) {
 		otherInfo = fmt.Sprintf("[%v]回滚至历史记录[%v]", time.Now().Format("2006-01-02 15:04:05"), history.ID)
 	} else {
 		// 路径错误，增加额外提示
-		otherInfo = fmt.Sprintf("[%v]回滚至历史记录[%v](检测到记录中的绑定路径由[%v]变更到了[%v]，本地上传的远程路径为[%v])", time.Now().Format("2006-01-02 15:04:05"), history.ID, history.RemotePath, projectPath.Path, history.RemotePath)
+		otherInfo = fmt.Sprintf("[%v]回滚至历史记录[%v](检测到记录中的绑定路径由[%v]变更到了[%v]，或包含子路径设置有变化。本次上传的远程路径为[%v])", time.Now().Format("2006-01-02 15:04:05"), history.ID, history.RemotePath, projectPath.Path, history.RemotePath)
 	}
 
 	// 开始回滚，上传文件
