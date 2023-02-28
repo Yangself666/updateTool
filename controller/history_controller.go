@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 	"updateTool/common"
+	"updateTool/dto"
 	"updateTool/model"
 	"updateTool/response"
 	"updateTool/sftp_util"
@@ -132,26 +133,63 @@ func GetHistory(c *gin.Context) {
 
 	DB := common.GetDB()
 	var histories []model.UpdateHistory
+	tx := DB.Model(&model.UpdateHistory{})
 	// 查询路径不为空
 	if remotePath != "" {
-		DB = DB.Where("remote_path like ?", remotePath+"%")
+		tx = tx.Where("remote_path like ?", remotePath+"%")
 	}
 	// 如果文件名称不为空，模糊搜索
 	if fileName != "" {
-		DB = DB.Where("file_name like ?", "%"+fileName+"%")
+		tx = tx.Where("file_name like ?", "%"+fileName+"%")
 	}
 	// 如果历史ID不为空
 	if id != 0 {
-		DB = DB.Where("id = ?", id)
+		tx = tx.Where("id = ?", id)
 	}
 	// 如果项目ID不为空
 	if projectId != 0 {
-		DB = DB.Where("project_id = ?", projectId)
+		tx = tx.Where("project_id = ?", projectId)
 	}
 	// 如果路径ID不为空
 	if pathId != 0 {
-		DB = DB.Where("path_id = ?", pathId)
+		tx = tx.Where("path_id = ?", pathId)
 	}
-	DB.Order("updated_at desc").Find(&histories)
-	response.Success(c, histories, "请求成功")
+	tx.Order("updated_at desc").Find(&histories)
+	var resultList = make([]dto.UpdateHistoryDto, 0)
+	for _, history := range histories {
+		var (
+			// 用户信息
+			userInfo    model.User
+			userInfoDto dto.UserDto
+			// 项目信息
+			projectInfo model.Project
+			// 路径信息
+			pathInfo model.ProjectPath
+		)
+		historyDto := dto.ToUpdateHistoryDto(history)
+		if historyDto.UserId != 0 {
+			DB.Model(&model.User{}).Where("id = ?", historyDto.UserId).First(&userInfo)
+		}
+		if historyDto.ProjectId != 0 {
+			DB.Model(&model.Project{}).Where("id = ?", historyDto.ProjectId).First(&projectInfo)
+		}
+		if historyDto.PathId != 0 {
+			DB.Model(&model.ProjectPath{}).Where("id = ?", historyDto.PathId).First(&pathInfo)
+		}
+		userInfoDto = dto.ToUserDto(userInfo)
+		if userInfo.ID == 0 {
+			userInfoDto.Name = "未知用户"
+		}
+		if projectInfo.ID == 0 {
+			projectInfo.ProjectName = "未知项目"
+		}
+		if pathInfo.ID == 0 {
+			pathInfo.Path = "未知路径"
+		}
+		historyDto.UserInfo = userInfoDto
+		historyDto.ProjectInfo = projectInfo
+		historyDto.PathInfo = pathInfo
+		resultList = append(resultList, historyDto)
+	}
+	response.Success(c, resultList, "请求成功")
 }

@@ -8,9 +8,9 @@ import (
 type ProjectDto struct {
 	gorm.Model
 	// 项目名称
-	ProjectName string `json:"projectName" gorm:"type:varchar(50);not null;comment: '项目名称''"`
+	ProjectName string `json:"projectName"`
 	// 项目简介
-	ProjectIntro string `json:"projectIntro" gorm:"type:varchar(500);null;comment: '项目简介''"`
+	ProjectIntro string `json:"projectIntro"`
 	// 项目绑定的服务器ID列表
 	ServerIdList []int `json:"serverIdList"`
 	// 项目绑定的服务器信息
