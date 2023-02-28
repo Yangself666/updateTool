@@ -171,7 +171,7 @@ func DelUser(c *gin.Context) {
 
 	// 删除用户关联项目
 	DB := common.GetDB()
-	DB.Model(&model.ProjectUserCon{}).Delete("user_id = ?", user.ID)
+	DB.Unscoped().Model(&model.ProjectUserCon{}).Delete("user_id = ?", user.ID)
 
 	// 删除用户
 	DB.Model(&model.User{}).Delete("id = ?", user.ID)

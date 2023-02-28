@@ -219,7 +219,7 @@ func EditProject(c *gin.Context) {
 	// 删除之前绑定的路径
 	DB.Unscoped().Where("project_id = ?", project.ID).Delete([]model.ProjectPath{})
 
-	// 删除之前绑定的路径
+	// 删除之前绑定的用户
 	DB.Unscoped().Where("project_id = ?", project.ID).Delete([]model.ProjectUserCon{})
 
 	// 如果填写了服务器就进行添加操作
@@ -273,7 +273,7 @@ func EditProject(c *gin.Context) {
 
 	// 如果填写了用户就进行添加操作
 	if projectDto.UserIdList != nil && len(projectDto.UserIdList) > 0 {
-		// 查询绑定的服务器
+		// 查询绑定的用户
 		var users []model.User
 		DB.Model(&model.User{}).Where("id in ?", projectDto.UserIdList).Find(&users)
 

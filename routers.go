@@ -70,6 +70,8 @@ func apiRouter(r *gin.Engine) *gin.Engine {
 	projectUserApi.POST("/add", controller.AddProjectUser)
 	// 删除用户关联
 	projectUserApi.POST("/del", controller.DelProjectUser)
+	// 批量编辑用户关联
+	projectUserApi.POST("/edit", controller.EditProjectUser)
 
 	// 项目中的路径管理
 	projectPathApi := projectApi.Group("/path", middleware.AuthMiddleware())
