@@ -53,7 +53,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 		_, exists := NoAuthPathMap[c.FullPath()]
 		// 如果用户ID不是1，并且接口不再跳过列表中，检查用户权限
-		if user.ID != 1 && !exists {
+		if !user.IsAdmin && !exists {
 			// 不再无需校验权限接口中
 			// 查询是否有对应权限
 			hasPermission := controller.HasPermissionByPath(user.ID, c.FullPath())

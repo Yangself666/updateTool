@@ -98,7 +98,7 @@ func AddUser(c *gin.Context) {
 	user.Password = string(hashPassword)
 
 	// 添加用户
-	DB.Create(&user)
+	DB.Omit("is_admin").Create(&user)
 
 	response.Success(c, nil, "添加成功")
 }
@@ -128,7 +128,7 @@ func EditUser(c *gin.Context) {
 	}
 
 	// 修改用户
-	DB.Model(&model.User{}).Select("name", "email").Where("id = ?", user.ID).Updates(&user)
+	DB.Omit("is_admin").Model(&model.User{}).Select("name", "email").Where("id = ?", user.ID).Updates(&user)
 
 	response.Success(c, nil, "修改成功")
 }

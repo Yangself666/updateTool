@@ -70,21 +70,29 @@ func GetPermissionListByLoginUser(c *gin.Context) {
 	}
 
 	DB := common.GetDB()
-	var userCount int64
+	var userInfo model.User
 	// 查询用户是否存在
-	DB.Model(&model.User{}).Where("id = ?", userId).Count(&userCount)
-	if userCount <= 0 {
+	DB.Model(&model.User{}).Where("id = ?", userId).First(&userInfo)
+	if userInfo.ID == 0 {
 		response.Fail(c, nil, "该用户不存在")
 		return
 	}
 
-	// 获取所有权限
-	permissionList := GetPermissionListByUserId(userId)
-	// 获取菜单列表
-	menuList := make([]string, 0)
-	DB.Raw("select permissions.menu_name from user_permission_cons "+
-		"left join permissions on user_permission_cons.permission_id = permissions.id "+
-		"where user_id = ? group by permissions.menu_name", userId).Find(&menuList)
+	var (
+		permissionList = make([]model.Permission, 0)
+		menuList       = make([]string, 0)
+	)
+	if userInfo.IsAdmin {
+		// 获取所有权限
+		DB.Model(&model.Permission{}).Find(&permissionList)
+		// 获取全部菜单列表
+		DB.Select("menu_name").Model(&model.Permission{}).Group("menu_name").Find(&menuList)
+	} else {
+		// 获取权限
+		permissionList = GetPermissionListByUserId(userId)
+		// 获取菜单列表
+		DB.Select("menu_name").Model(&model.UserPermissionCon{}).Joins("left join permissions on user_permission_cons.permission_id = permissions.id").Where("user_permission_cons.user_id = ?", userId).Group("permissions.menu_name").Find(&menuList)
+	}
 
 	response.Success(c, gin.H{"menuList": menuList, "permissionList": permissionList}, "该用户不存在")
 }
@@ -105,15 +113,22 @@ func GetPermissionListByUser(c *gin.Context) {
 		return
 	}
 	DB := common.GetDB()
-	var userCount int64
+	var user model.User
 	// 查询用户是否存在
-	DB.Model(&model.User{}).Where("id = ?", param.ID).Count(&userCount)
-	if userCount <= 0 {
+	DB.Model(&model.User{}).Where("id = ?", param.ID).First(&user)
+	if user.ID == 0 {
 		response.Fail(c, nil, "该用户不存在")
 		return
 	}
-	// 查询权限列表
-	permissionList := GetPermissionListByUserId(param.ID)
+
+	// 权限列表
+	var permissionList = make([]model.Permission, 0)
+	if user.IsAdmin {
+		DB.Model(&model.Permission{}).Find(&permissionList)
+	} else {
+		// 查询权限列表
+		permissionList = GetPermissionListByUserId(param.ID)
+	}
 
 	response.Success(c, permissionList, "请求成功")
 }
