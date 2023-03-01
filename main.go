@@ -15,7 +15,7 @@ func main() {
 
 	r := gin.Default()
 	// 不记录静态文件日志
-	gin.LoggerWithWriter(gin.DefaultWriter, "/assets/*")
+	gin.LoggerWithWriter(gin.DefaultWriter, "/assets")
 	// 加载路由
 	r = CollectRoute(r)
 

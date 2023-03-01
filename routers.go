@@ -11,6 +11,7 @@ func CollectRoute(r *gin.Engine) *gin.Engine {
 	r.Use(middleware.CORSMiddleware())
 	// 静态文件路由
 	r.StaticFile("/", "resource/web/index.html")
+	r.StaticFile("/vite.svg", "resource/web/vite.svg")
 	r.Static("/assets", "resource/web/assets")
 	// 解决vue等前端路由问题（gin路由不存在返回首页）
 	r.NoRoute(func(c *gin.Context) {
@@ -96,6 +97,17 @@ func apiRouter(r *gin.Engine) *gin.Engine {
 	serverApi.POST("/list", controller.GetServerList)
 	// 检查服务器是否可以连接
 	serverApi.POST("/check", controller.CheckServer)
+
+	// 权限相关接口
+	permissionApi := apiRoutes.Group("/permission", middleware.AuthMiddleware())
+	// 添加权限信息
+	permissionApi.POST("/add", controller.AddPermission)
+	// 删除权限信息
+	permissionApi.POST("/del", controller.DelPermission)
+	// 修改权限信息
+	permissionApi.POST("/edit", controller.EditPermission)
+	// 获取权限列表
+	permissionApi.POST("/list", controller.GetPermissionList)
 
 	// 上传文件
 	uploadApi := apiRoutes.Group("/upload", middleware.AuthMiddleware())

@@ -126,16 +126,16 @@ func DelProject(c *gin.Context) {
 	}
 
 	// 删除关联的服务器
-	DB.Unscoped().Where("project_id = ?", projectId).Delete([]model.ProjectServerCon{})
+	DB.Unscoped().Delete(&model.ProjectServerCon{}, "project_id = ?", projectId)
 
 	// 删除路径的关联
-	DB.Unscoped().Where("project_id = ?", projectId).Delete([]model.ProjectPath{})
+	DB.Unscoped().Delete(&model.ProjectPath{}, "project_id = ?", projectId)
 
 	// 删除用户的关联
-	DB.Unscoped().Where("project_id = ?", projectId).Delete([]model.ProjectUserCon{})
+	DB.Unscoped().Delete(&model.ProjectUserCon{}, "project_id = ?", projectId)
 
 	// 删除项目
-	DB.Where("id = ?", projectId).Delete([]model.Project{})
+	DB.Delete(&model.Project{}, "id = ?", projectId)
 
 	response.Success(c, nil, "删除成功")
 }
@@ -214,13 +214,13 @@ func EditProject(c *gin.Context) {
 	}
 
 	// 删除之前绑定的服务器
-	DB.Unscoped().Where("project_id = ?", project.ID).Delete([]model.ProjectServerCon{})
+	DB.Unscoped().Delete(&model.ProjectServerCon{}, "project_id = ?", project.ID)
 
 	// 删除之前绑定的路径
-	DB.Unscoped().Where("project_id = ?", project.ID).Delete([]model.ProjectPath{})
+	DB.Unscoped().Delete(&model.ProjectPath{}, "project_id = ?", project.ID)
 
 	// 删除之前绑定的用户
-	DB.Unscoped().Where("project_id = ?", project.ID).Delete([]model.ProjectUserCon{})
+	DB.Unscoped().Delete(&model.ProjectUserCon{}, "project_id = ?", project.ID)
 
 	// 如果填写了服务器就进行添加操作
 	if projectDto.ServerIdList != nil && len(projectDto.ServerIdList) > 0 {

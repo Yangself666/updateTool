@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/viper"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"updateTool/model"
 )
 
@@ -14,7 +15,9 @@ func InitDB() *gorm.DB {
 	dbPath := viper.GetString("datasource.path")
 
 	// 创建数据库连接
-	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
 	if err != nil {
 		panic("failed to connect database, err: " + err.Error())
 	}
@@ -26,6 +29,8 @@ func InitDB() *gorm.DB {
 	db.AutoMigrate(&model.Server{})
 	db.AutoMigrate(&model.ProjectServerCon{})
 	db.AutoMigrate(&model.ProjectUserCon{})
+	db.AutoMigrate(&model.Permission{})
+	db.AutoMigrate(&model.UserPermissionCon{})
 
 	return db
 }

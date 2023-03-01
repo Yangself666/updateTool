@@ -100,7 +100,7 @@ func DelProjectUser(c *gin.Context) {
 		return
 	}
 	// 删除用户的关联
-	DB.Unscoped().Where("project_id = ? and user_id = ?", param.ProjectId, param.UserId).Delete(model.ProjectUserCon{})
+	DB.Unscoped().Delete(&model.ProjectUserCon{}, "project_id = ? and user_id = ?", param.ProjectId, param.UserId)
 
 	response.Success(c, nil, "删除成功")
 }
@@ -131,7 +131,7 @@ func EditProjectUser(c *gin.Context) {
 		return
 	}
 	// 删除所有项目关联用户
-	DB.Unscoped().Where("project_id = ?", param.ProjectId).Delete([]model.ProjectUserCon{})
+	DB.Unscoped().Delete(&model.ProjectUserCon{}, "project_id = ?", param.ProjectId)
 	// 如果传入了新的用户ID
 	if len(param.UserIdList) > 0 {
 		// 查询存在的用户

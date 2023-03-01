@@ -84,7 +84,7 @@ func DelProjectPath(c *gin.Context) {
 	}
 
 	// 删除路径的关联
-	DB.Unscoped().Where("id = ?", pathId).Delete(model.ProjectPath{})
+	DB.Delete(&model.ProjectPath{}, "id = ?", pathId)
 
 	response.Success(c, nil, "删除成功")
 }
