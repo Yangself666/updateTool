@@ -3,8 +3,6 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	"log"
-	"path"
-	"strings"
 	"updateTool/common"
 	"updateTool/dto"
 	"updateTool/model"
@@ -49,54 +47,56 @@ func AddProject(c *gin.Context) {
 		}
 	}
 
-	// 如果填写了服务器路径就进行添加操作
-	if projectDto.ProjectPathList != nil && len(projectDto.ProjectPathList) > 0 {
-		// 去重
-		pathMap := make(map[string]model.ProjectPath)
-		for _, projectPath := range projectDto.ProjectPathList {
-			// 路径检查
-			if !strings.HasSuffix(projectPath.Path, "/") {
-				projectPath.Path = projectPath.Path + "/"
+	/*
+		// 如果填写了服务器路径就进行添加操作
+		if projectDto.ProjectPathList != nil && len(projectDto.ProjectPathList) > 0 {
+			// 去重
+			pathMap := make(map[string]model.ProjectPath)
+			for _, projectPath := range projectDto.ProjectPathList {
+				// 路径检查
+				if !strings.HasSuffix(projectPath.Path, "/") {
+					projectPath.Path = projectPath.Path + "/"
+				}
+				cleanPath := path.Clean(projectPath.Path)
+				projectPath.Path = cleanPath
+				// 放置项目ID
+				projectPath.ProjectId = project.ID
+				// 放置默认值
+				if projectPath.HasSubPath == 0 {
+					projectPath.HasSubPath = 1
+				}
+				// 说明path不存在
+				if pathMap[cleanPath].IsEmpty() {
+					// 存放路径
+					pathMap[cleanPath] = projectPath
+				}
 			}
-			cleanPath := path.Clean(projectPath.Path)
-			projectPath.Path = cleanPath
-			// 放置项目ID
-			projectPath.ProjectId = project.ID
-			// 放置默认值
-			if projectPath.HasSubPath == 0 {
-				projectPath.HasSubPath = 1
+			// 创建新的数组
+			newPathList := make([]model.ProjectPath, 0)
+			for _, value := range pathMap {
+				newPathList = append(newPathList, value)
 			}
-			// 说明path不存在
-			if pathMap[cleanPath].IsEmpty() {
-				// 存放路径
-				pathMap[cleanPath] = projectPath
-			}
-		}
-		// 创建新的数组
-		newPathList := make([]model.ProjectPath, 0)
-		for _, value := range pathMap {
-			newPathList = append(newPathList, value)
+
+			// 保存路径数组
+			DB.Create(&newPathList)
 		}
 
-		// 保存路径数组
-		DB.Create(&newPathList)
-	}
+		// 如果填写了用户就进行添加操作
+		if projectDto.UserIdList != nil && len(projectDto.UserIdList) > 0 {
+			// 查询绑定的服务器
+			var users []model.User
+			DB.Model(&model.User{}).Where("id in ?", projectDto.UserIdList).Find(&users)
 
-	// 如果填写了用户就进行添加操作
-	if projectDto.UserIdList != nil && len(projectDto.UserIdList) > 0 {
-		// 查询绑定的服务器
-		var users []model.User
-		DB.Model(&model.User{}).Where("id in ?", projectDto.UserIdList).Find(&users)
-
-		// 添加用户
-		if len(users) > 0 {
-			cons := make([]model.ProjectUserCon, 0)
-			for _, user := range users {
-				cons = append(cons, model.ProjectUserCon{ProjectId: project.ID, UserId: user.ID})
+			// 添加用户
+			if len(users) > 0 {
+				cons := make([]model.ProjectUserCon, 0)
+				for _, user := range users {
+					cons = append(cons, model.ProjectUserCon{ProjectId: project.ID, UserId: user.ID})
+				}
+				DB.Create(&cons)
 			}
-			DB.Create(&cons)
 		}
-	}
+	*/
 
 	response.Success(c, nil, "请求成功")
 }
@@ -215,13 +215,6 @@ func EditProject(c *gin.Context) {
 
 	// 删除之前绑定的服务器
 	DB.Unscoped().Delete(&model.ProjectServerCon{}, "project_id = ?", project.ID)
-
-	// 删除之前绑定的路径
-	DB.Unscoped().Delete(&model.ProjectPath{}, "project_id = ?", project.ID)
-
-	// 删除之前绑定的用户
-	DB.Unscoped().Delete(&model.ProjectUserCon{}, "project_id = ?", project.ID)
-
 	// 如果填写了服务器就进行添加操作
 	if projectDto.ServerIdList != nil && len(projectDto.ServerIdList) > 0 {
 		// 查询绑定的服务器
@@ -238,54 +231,62 @@ func EditProject(c *gin.Context) {
 		}
 	}
 
-	// 如果填写了服务器路径就进行添加操作
-	if projectDto.ProjectPathList != nil && len(projectDto.ProjectPathList) > 0 {
-		// 去重
-		pathMap := make(map[string]model.ProjectPath)
-		for _, projectPath := range projectDto.ProjectPathList {
-			// 路径检查
-			if !strings.HasSuffix(projectPath.Path, "/") {
-				projectPath.Path = projectPath.Path + "/"
+	/*
+		// 删除之前绑定的路径
+		DB.Unscoped().Delete(&model.ProjectPath{}, "project_id = ?", project.ID)
+
+		// 删除之前绑定的用户
+		DB.Unscoped().Delete(&model.ProjectUserCon{}, "project_id = ?", project.ID)
+
+		// 如果填写了服务器路径就进行添加操作
+		if projectDto.ProjectPathList != nil && len(projectDto.ProjectPathList) > 0 {
+			// 去重
+			pathMap := make(map[string]model.ProjectPath)
+			for _, projectPath := range projectDto.ProjectPathList {
+				// 路径检查
+				if !strings.HasSuffix(projectPath.Path, "/") {
+					projectPath.Path = projectPath.Path + "/"
+				}
+				cleanPath := path.Clean(projectPath.Path)
+				projectPath.Path = cleanPath
+				// 放置项目ID
+				projectPath.ProjectId = project.ID
+				// 放置默认值
+				if projectPath.HasSubPath == 0 {
+					projectPath.HasSubPath = 1
+				}
+				// 说明path不存在
+				if pathMap[cleanPath].IsEmpty() {
+					// 存放路径
+					pathMap[cleanPath] = projectPath
+				}
 			}
-			cleanPath := path.Clean(projectPath.Path)
-			projectPath.Path = cleanPath
-			// 放置项目ID
-			projectPath.ProjectId = project.ID
-			// 放置默认值
-			if projectPath.HasSubPath == 0 {
-				projectPath.HasSubPath = 1
+			// 创建新的数组
+			newPathList := make([]model.ProjectPath, 0)
+			for _, value := range pathMap {
+				newPathList = append(newPathList, value)
 			}
-			// 说明path不存在
-			if pathMap[cleanPath].IsEmpty() {
-				// 存放路径
-				pathMap[cleanPath] = projectPath
-			}
-		}
-		// 创建新的数组
-		newPathList := make([]model.ProjectPath, 0)
-		for _, value := range pathMap {
-			newPathList = append(newPathList, value)
+
+			// 保存路径数组
+			DB.Create(&newPathList)
 		}
 
-		// 保存路径数组
-		DB.Create(&newPathList)
-	}
+		// 如果填写了用户就进行添加操作
+		if projectDto.UserIdList != nil && len(projectDto.UserIdList) > 0 {
+			// 查询绑定的用户
+			var users []model.User
+			DB.Model(&model.User{}).Where("id in ?", projectDto.UserIdList).Find(&users)
 
-	// 如果填写了用户就进行添加操作
-	if projectDto.UserIdList != nil && len(projectDto.UserIdList) > 0 {
-		// 查询绑定的用户
-		var users []model.User
-		DB.Model(&model.User{}).Where("id in ?", projectDto.UserIdList).Find(&users)
-
-		// 添加用户
-		if len(users) > 0 {
-			cons := make([]model.ProjectUserCon, 0)
-			for _, user := range users {
-				cons = append(cons, model.ProjectUserCon{ProjectId: project.ID, UserId: user.ID})
+			// 添加用户
+			if len(users) > 0 {
+				cons := make([]model.ProjectUserCon, 0)
+				for _, user := range users {
+					cons = append(cons, model.ProjectUserCon{ProjectId: project.ID, UserId: user.ID})
+				}
+				DB.Create(&cons)
 			}
-			DB.Create(&cons)
 		}
-	}
+	*/
 
 	DB.Updates(&project)
 	response.Success(c, nil, "请求成功")
