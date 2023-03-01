@@ -411,8 +411,8 @@ func GetProjectListByUserId(c *gin.Context) {
 
 // GetProjectListByLoginUser 获取登陆用户绑定的项目
 func GetProjectListByLoginUser(c *gin.Context) {
-	user, exist := c.Get("user")
-	if !exist {
+	user, exists := c.Get("user")
+	if !exists {
 		response.Fail(c, nil, "用户未登陆")
 		return
 	}

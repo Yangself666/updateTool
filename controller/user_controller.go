@@ -15,7 +15,11 @@ import (
 
 // Info 获取用户信息
 func Info(c *gin.Context) {
-	user, _ := c.Get("user")
+	user, exists := c.Get("user")
+	if !exists {
+		response.Fail(c, nil, "用户未登陆")
+		return
+	}
 	response.Success(c, dto.ToUserDto(user.(model.User)), "请求成功")
 }
 

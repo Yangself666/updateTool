@@ -53,3 +53,94 @@ func EditUserPermission(c *gin.Context) {
 	}
 	response.Success(c, nil, "请求成功")
 }
+
+// GetPermissionListByLoginUser 获取登陆用户自己的权限
+func GetPermissionListByLoginUser(c *gin.Context) {
+	user, exists := c.Get("user")
+	var userId uint
+	if !exists {
+		response.Fail(c, nil, "用户未登陆")
+		return
+	} else {
+		userId = user.(model.User).ID
+		if userId == 0 {
+			response.Fail(c, nil, "用户未登陆")
+			return
+		}
+	}
+
+	DB := common.GetDB()
+	var userCount int64
+	// 查询用户是否存在
+	DB.Model(&model.User{}).Where("id = ?", userId).Count(&userCount)
+	if userCount <= 0 {
+		response.Fail(c, nil, "该用户不存在")
+		return
+	}
+
+	// 获取所有权限
+	permissionList := GetPermissionListByUserId(userId)
+	// 获取菜单列表
+	menuList := make([]string, 0)
+	DB.Raw("select permissions.menu_name from user_permission_cons "+
+		"left join permissions on user_permission_cons.permission_id = permissions.id "+
+		"where user_id = ? group by permissions.menu_name", userId).Find(&menuList)
+
+	response.Success(c, gin.H{"menuList": menuList, "permissionList": permissionList}, "该用户不存在")
+}
+
+// GetPermissionListByUser 通过用户ID获取权限列表
+func GetPermissionListByUser(c *gin.Context) {
+	type Param struct {
+		ID uint
+	}
+	var param Param
+	err := c.BindJSON(&param)
+	if err != nil {
+		response.Fail(c, nil, "参数不正确")
+		return
+	}
+	if param.ID == 0 {
+		response.Fail(c, nil, "参数不完整")
+		return
+	}
+	DB := common.GetDB()
+	var userCount int64
+	// 查询用户是否存在
+	DB.Model(&model.User{}).Where("id = ?", param.ID).Count(&userCount)
+	if userCount <= 0 {
+		response.Fail(c, nil, "该用户不存在")
+		return
+	}
+	// 查询权限列表
+	permissionList := GetPermissionListByUserId(param.ID)
+
+	response.Success(c, permissionList, "请求成功")
+}
+
+// GetPermissionListByUserId 通过用户ID获取权限列表
+func GetPermissionListByUserId(userId uint) []model.Permission {
+	var permissionList = make([]model.Permission, 0)
+	if userId != 0 {
+		DB := common.GetDB()
+		DB.Model(&model.UserPermissionCon{}).Select("permissions.*").Joins("left join permissions on user_permission_cons.permission_id = permissions.id").Where("user_permission_cons.user_id = ?", userId).Find(&permissionList)
+	}
+
+	return permissionList
+}
+
+// HasPermissionByPath 通过用户ID和访问路径查询是否有权限
+func HasPermissionByPath(userId uint, path string) bool {
+	result := false
+	if userId != 0 || path == "" {
+		return result
+	}
+	DB := common.GetDB()
+	var count int64
+	DB.Model(&model.UserPermissionCon{}).Select("permissions.*").Joins("left join permissions on user_permission_cons.permission_id = permissions.id").Where("user_permission_cons.user_id = ? and permissions.permission_path = ?", userId, path).Count(&count)
+	// 如果包含该权限
+	if count > 0 {
+		result = true
+	}
+	return result
+}

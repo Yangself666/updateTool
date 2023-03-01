@@ -22,5 +22,9 @@ func Fail(c *gin.Context, data interface{}, msg string) {
 }
 
 func Unauthorized(c *gin.Context) {
-	Response(c, http.StatusUnauthorized, http.StatusUnauthorized, nil, "权限不足")
+	Response(c, http.StatusOK, http.StatusUnauthorized, nil, "凭证已过期")
+}
+
+func Forbidden(c *gin.Context) {
+	Response(c, http.StatusOK, http.StatusForbidden, nil, "权限不足")
 }
