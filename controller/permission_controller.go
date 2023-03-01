@@ -104,5 +104,29 @@ func DelPermission(c *gin.Context) {
 
 // GetPermissionList 获取权限列表
 func GetPermissionList(c *gin.Context) {
+	var permission model.Permission
+	err := c.BindJSON(&permission)
+	if err != nil {
+		response.Fail(c, nil, "参数不正确")
+		return
+	}
 
+	DB := common.GetDB()
+	var permissionList = make([]model.Permission, 0)
+	tx := DB.Model(&model.Permission{})
+	if permission.ID != 0 {
+		tx = tx.Where("id = ?", permission.ID)
+	}
+	if permission.PermissionName != "" {
+		tx = tx.Where("permission_name like ?", "%"+permission.PermissionName+"%")
+	}
+	if permission.MenuName != "" {
+		tx = tx.Where("menu_name like ?", "%"+permission.MenuName+"%")
+	}
+	if permission.PermissionPath != "" {
+		tx = tx.Where("permission_path like ?", "%"+permission.PermissionPath+"%")
+	}
+	tx.Find(&permissionList)
+
+	response.Success(c, permissionList, "请求成功")
 }
