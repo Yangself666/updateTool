@@ -130,8 +130,5 @@ func apiRouter(r *gin.Engine) *gin.Engine {
 	// 回滚
 	historyGroup.POST("/rollback", controller.Rollback)
 
-	// 重新读取配置文件
-	apiRoutes.GET("/reload", controller.Reload)
-
 	return r
 }

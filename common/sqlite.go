@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/viper"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 	"updateTool/model"
 )
 
@@ -16,7 +15,8 @@ func InitDB() *gorm.DB {
 
 	// 创建数据库连接
 	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
+		// 设置日志打印sql
+		// Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
 		panic("failed to connect database, err: " + err.Error())
