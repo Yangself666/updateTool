@@ -49,6 +49,10 @@ func apiRouter(r *gin.Engine) *gin.Engine {
 	userApi.POST("/userPermission", controller.GetPermissionListByUser)
 	// 登陆用户获取自己的权限
 	userApi.POST("/permission", controller.GetPermissionListByLoginUser)
+	// 设置用户为管理员
+	userApi.POST("/setUserAsAdmin", controller.SetUserAsAdmin)
+	// 设置用户为非管理员
+	userApi.POST("/setUserAsNonAdmin", controller.SetUserAsNonAdmin)
 
 	// 项目管理相关接口
 	projectApi := apiRoutes.Group("/project", middleware.AuthMiddleware())

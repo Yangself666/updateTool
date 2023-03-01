@@ -413,7 +413,7 @@ func GetProjectListByUserId(c *gin.Context) {
 func GetProjectListByLoginUser(c *gin.Context) {
 	user, exists := c.Get("user")
 	if !exists {
-		response.Fail(c, nil, "用户未登陆")
+		response.Unauthorized(c)
 		return
 	}
 	// 断言类型

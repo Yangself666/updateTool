@@ -59,7 +59,7 @@ func GetPermissionListByLoginUser(c *gin.Context) {
 	user, exists := c.Get("user")
 	var userId uint
 	if !exists {
-		response.Fail(c, nil, "用户未登陆")
+		response.Unauthorized(c)
 		return
 	} else {
 		userId = user.(model.User).ID

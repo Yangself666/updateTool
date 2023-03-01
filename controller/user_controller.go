@@ -16,8 +16,9 @@ import (
 // Info 获取用户信息
 func Info(c *gin.Context) {
 	user, exists := c.Get("user")
-	if !exists {
-		response.Fail(c, nil, "用户未登陆")
+	userId := user.(model.User).ID
+	if !exists || userId == 0 {
+		response.Unauthorized(c)
 		return
 	}
 	response.Success(c, dto.ToUserDto(user.(model.User)), "请求成功")
@@ -131,6 +132,74 @@ func EditUser(c *gin.Context) {
 	DB.Omit("is_admin").Model(&model.User{}).Select("name", "email").Where("id = ?", user.ID).Updates(&user)
 
 	response.Success(c, nil, "修改成功")
+}
+
+// SetUserAsAdmin 设置为管理员
+func SetUserAsAdmin(c *gin.Context) {
+	type Param struct {
+		ID uint
+	}
+	var param Param
+	err := c.BindJSON(&param)
+	if err != nil {
+		response.Fail(c, nil, "参数不正确")
+		return
+	}
+
+	// 检查用户是否存在
+	DB := common.GetDB()
+	var count int64
+	DB.Model(&model.User{}).Where("id = ?", param.ID).Count(&count)
+	if count <= 0 {
+		response.Fail(c, nil, "该用户不存在")
+		return
+	}
+
+	// 设置用户为管理员
+	DB.Model(&model.User{}).Where("id = ?", param.ID).Update("is_admin", true)
+
+	response.Success(c, nil, "请求成功")
+}
+
+// SetUserAsNonAdmin 设置为非管理员
+func SetUserAsNonAdmin(c *gin.Context) {
+	type Param struct {
+		ID uint
+	}
+	var param Param
+	err := c.BindJSON(&param)
+	if err != nil {
+		response.Fail(c, nil, "参数不正确")
+		return
+	}
+
+	// 不能设置自己为非管理员
+	// 查询登陆用户是否为传入的用户
+	user, exists := c.Get("user")
+	userId := user.(model.User).ID
+	if !exists || userId == 0 {
+		response.Unauthorized(c)
+		return
+	}
+
+	if userId == param.ID {
+		response.Fail(c, nil, "不能设置自己为非管理员")
+		return
+	}
+
+	// 检查用户是否存在
+	DB := common.GetDB()
+	var count int64
+	DB.Model(&model.User{}).Where("id = ?", param.ID).Count(&count)
+	if count <= 0 {
+		response.Fail(c, nil, "该用户不存在")
+		return
+	}
+
+	// 设置用户为非管理员
+	DB.Model(&model.User{}).Where("id = ?", param.ID).Update("is_admin", false)
+
+	response.Success(c, nil, "请求成功")
 }
 
 // EditUserPassword 修改用户密码
