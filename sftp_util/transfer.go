@@ -115,6 +115,21 @@ func SendZipFileToServer(server model.Server, localZipFilePath string, remotePat
 		}
 		// 创建连接后首先defer进行关闭操作，防止遗忘
 		defer client.Close()
+	} else if server.ServerType == 2 {
+		client, err = GetSftpClientByKey(server.Username, server.PrivateKey, server.Host, server.Port)
+		if err != nil {
+			log.Println("["+server.ServerName+"("+server.Host+")]连接失败", err)
+			resultMap["info"] = "[" + server.ServerName + "(" + server.Host + ")]连接失败"
+			result <- resultMap
+			return
+		}
+		// 创建连接后首先defer进行关闭操作，防止遗忘
+		defer client.Close()
+	} else {
+		log.Println("["+server.ServerName+"("+server.Host+")]配置存在错误，无法连接", err)
+		resultMap["info"] = "[" + server.ServerName + "(" + server.Host + ")]配置存在错误，无法连接"
+		result <- resultMap
+		return
 	}
 
 	// 检查远程文件夹状态
@@ -205,6 +220,21 @@ func SendFileToServer(server model.Server, localFilePath string, remotePath stri
 		}
 		// 创建连接后首先defer进行关闭操作，防止遗忘
 		defer client.Close()
+	} else if server.ServerType == 2 {
+		client, err = GetSftpClientByKey(server.Username, server.PrivateKey, server.Host, server.Port)
+		if err != nil {
+			log.Println("["+server.ServerName+"("+server.Host+")]连接失败", err)
+			resultMap["info"] = "[" + server.ServerName + "(" + server.Host + ")]连接失败"
+			result <- resultMap
+			return
+		}
+		// 创建连接后首先defer进行关闭操作，防止遗忘
+		defer client.Close()
+	} else {
+		log.Println("["+server.ServerName+"("+server.Host+")]配置存在错误，无法连接", err)
+		resultMap["info"] = "[" + server.ServerName + "(" + server.Host + ")]配置存在错误，无法连接"
+		result <- resultMap
+		return
 	}
 
 	// 检查远程文件夹状态
@@ -254,7 +284,7 @@ func SendFileToServer(server model.Server, localFilePath string, remotePath stri
 	return
 }
 
-// SendDirectoryToServer 发送文件夹到服务器
+// SendDirectoryToServer 发送文件夹到服务器（暂时不用）
 // user			string	服务器用户名
 // password 	string	服务器密码
 // host			string	服务器主机地址

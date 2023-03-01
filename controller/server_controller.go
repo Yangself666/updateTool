@@ -167,6 +167,17 @@ func CheckServer(c *gin.Context) {
 		}
 		// 创建连接后首先defer进行关闭操作，防止遗忘
 		defer client.Close()
+	} else if serverResult.ServerType == 2 {
+		client, err = sftp_util.GetSftpClientByKey(serverResult.Username, serverResult.PrivateKey, serverResult.Host, serverResult.Port)
+		if err != nil {
+			response.Fail(c, nil, "该服务器无法连接，请检查该服务器的参数及配置")
+			return
+		}
+		// 创建连接后首先defer进行关闭操作，防止遗忘
+		defer client.Close()
+	} else {
+		response.Fail(c, nil, "服务器类型有误")
+		return
 	}
 
 	response.Success(c, nil, "服务器连接成功")
