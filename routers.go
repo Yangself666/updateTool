@@ -43,6 +43,8 @@ func apiRouter(r *gin.Engine) *gin.Engine {
 	userApi.POST("/del", controller.DelUser)
 	// 获取所有用户列表
 	userApi.POST("/list", controller.ListUser)
+	// 批量编辑用户权限
+	userApi.POST("/permission", controller.EditUserPermission)
 
 	// 项目管理相关接口
 	projectApi := apiRoutes.Group("/project", middleware.AuthMiddleware())
