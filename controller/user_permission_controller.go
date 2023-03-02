@@ -94,7 +94,7 @@ func GetPermissionListByLoginUser(c *gin.Context) {
 		DB.Select("menu_name").Model(&model.UserPermissionCon{}).Joins("left join permissions on user_permission_cons.permission_id = permissions.id").Where("user_permission_cons.user_id = ?", userId).Group("permissions.menu_name").Find(&menuList)
 	}
 
-	response.Success(c, gin.H{"menuList": menuList, "permissionList": permissionList}, "该用户不存在")
+	response.Success(c, gin.H{"menuList": menuList, "permissionList": permissionList}, "请求成功")
 }
 
 // GetPermissionListByUser 通过用户ID获取权限列表

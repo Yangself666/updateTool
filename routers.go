@@ -26,12 +26,12 @@ func CollectRoute(r *gin.Engine) *gin.Engine {
 func apiRouter(r *gin.Engine) *gin.Engine {
 	// 服务接口组
 	apiRoutes := r.Group("/api")
-	// 登陆
+	// 登陆（不需要绑定权限）
 	apiRoutes.POST("/login", middleware.ExposeHeaderMiddleware(), controller.Login)
 
 	// 用户相关接口
 	userApi := apiRoutes.Group("/user", middleware.AuthMiddleware())
-	// 登陆用户获取信息
+	// 登陆用户获取信息（不需要绑定权限）
 	userApi.POST("/info", controller.Info)
 	// 添加用户
 	userApi.POST("/add", controller.AddUser)
@@ -47,7 +47,7 @@ func apiRouter(r *gin.Engine) *gin.Engine {
 	userApi.POST("/editPermission", controller.EditUserPermission)
 	// 根据用户ID获取用户权限列表
 	userApi.POST("/userPermission", controller.GetPermissionListByUser)
-	// 登陆用户获取自己的权限
+	// 登陆用户获取自己的权限（不需要绑定权限）
 	userApi.POST("/permission", controller.GetPermissionListByLoginUser)
 	// 设置用户为管理员
 	userApi.POST("/setUserAsAdmin", controller.SetUserAsAdmin)
@@ -77,14 +77,17 @@ func apiRouter(r *gin.Engine) *gin.Engine {
 
 	// 项目中的用户管理
 	projectUserApi := projectApi.Group("/user", middleware.AuthMiddleware())
-	// 添加用户关联
-	projectUserApi.POST("/add", controller.AddProjectUser)
-	// 删除用户关联
-	projectUserApi.POST("/del", controller.DelProjectUser)
 	// 批量编辑用户关联
 	projectUserApi.POST("/edit", controller.EditProjectUser)
 	// 获取项目中的用户列表
 	projectUserApi.POST("/list", controller.GetUserListByProjectId)
+
+	// 项目中的服务器管理
+	projectServerApi := projectApi.Group("/server", middleware.AuthMiddleware())
+	// 批量编辑服务器关联
+	projectServerApi.POST("/edit", controller.EditProjectServer)
+	// 获取项目中的服务器列表
+	projectServerApi.POST("/list", controller.GetServerListByProjectId)
 
 	// 项目中的路径管理
 	projectPathApi := projectApi.Group("/path", middleware.AuthMiddleware())
