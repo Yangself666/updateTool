@@ -28,9 +28,6 @@ func Rollback(c *gin.Context) {
 		return
 	}
 
-	// 计算处理开始时间
-	start := time.Now()
-
 	DB := common.GetDB()
 	history := model.UpdateHistory{}
 	DB.First(&history, rollbackId)
@@ -62,61 +59,42 @@ func Rollback(c *gin.Context) {
 	}
 
 	// 开始回滚，上传文件
-	// 传输文件到所有服务器
-	isZipFile := util.FileIsZip(history.FileName)
-	var resultList []map[string]interface{}
-	if isZipFile {
-		// 这里进行解压缩的上传
-		resultList, err = sftp_util.SendZipFileToAllServer(
-			int(history.ProjectId),
-			history.LocalPath,
-			history.RemotePath)
-	} else {
-		resultList, err = sftp_util.SendFileToAllServer(
-			int(history.ProjectId),
-			history.LocalPath,
-			history.RemotePath,
-			history.FileName)
-	}
-
-	if err != nil {
-		response.Fail(c, nil, err.Error())
-		return
-	}
-	resultBool, resultStr := util.UploadResultHandler(resultList)
-	// 计算处理总时间
-	elapsed := time.Since(start)
+	// 首先保存正在上传的历史记录
 	var userId uint
 	user, exists := c.Get("user")
 	if exists {
 		userId = user.(model.User).ID
 	}
-
-	if resultBool {
-		// 添加关联关系
-		history := model.UpdateHistory{
-			UserId:         userId,
-			RemotePath:     history.RemotePath,
-			LocalPath:      history.LocalPath,
-			FileName:       history.FileName,
-			UniqueFileName: history.UniqueFileName,
-			ProjectId:      history.ProjectId,
-			PathId:         history.PathId,
-			ServerInfo:     resultStr,
-			OtherInfo:      otherInfo,
-		}
-		// 将上传记录保存到数据库
-		saveHistory := DB.Create(&history)
-		if saveHistory.Error != nil {
-			log.Println("保存回滚记录时发生错误：", err)
-			response.Success(c, resultStr, fmt.Sprintf("操作成功，但保存回滚记录时发生错误，总耗时: %v", elapsed))
-			return
-		}
-		response.Success(c, resultStr, fmt.Sprintf("操作成功，总耗时: %v", elapsed))
+	// 上传中
+	rollbackHistory := model.UpdateHistory{
+		UserId:         userId,
+		RemotePath:     history.RemotePath,
+		LocalPath:      history.LocalPath,
+		FileName:       history.FileName,
+		UniqueFileName: history.UniqueFileName,
+		ProjectId:      history.ProjectId,
+		PathId:         history.PathId,
+		UpdateStatus:   1, // 上传中
+		OtherInfo:      otherInfo,
+	}
+	// 将回滚记录保存到数据库
+	saveHistory := DB.Create(&rollbackHistory)
+	if saveHistory.Error != nil {
+		log.Println("保存回滚记录时发生错误：", err)
+		response.Fail(c, nil, "保存回滚记录时发生错误")
 		return
 	}
 
-	response.Fail(c, resultStr, fmt.Sprintf("所有服务器回滚至历史记录[%v]失败，总耗时: %v", history.ID, elapsed))
+	// 传输文件到所有服务器
+	isZipFile := util.FileIsZip(rollbackHistory.FileName)
+	if isZipFile {
+		// 这里进行解压缩的上传
+		go sftp_util.SendZipFileToAllServer(rollbackHistory)
+	} else {
+		go sftp_util.SendFileToAllServer(rollbackHistory)
+	}
+
+	response.Success(c, nil, fmt.Sprintf("文件正在回滚中，请在历史记录中查看结果。ID:%v", rollbackHistory.ID))
 }
 
 // GetHistory 获取某生产地址的更新记录

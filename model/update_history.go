@@ -19,6 +19,8 @@ type UpdateHistory struct {
 	ProjectId uint `json:"projectId" gorm:"type:int;not null;default:0;comment: '所属项目ID'"`
 	// 所属路径ID
 	PathId uint `json:"pathId" gorm:"type:int;not null;default:0;comment: '所属路径ID'"`
+	// 更新历史状态类型（1:上传中 2:部分成功 3:全部成功 4:失败）
+	UpdateStatus int `json:"updateStatus" gorm:"type:int;not null;default:1;comment: '更新历史状态类型（1:上传中 2:部分成功 3:全部成功 4:失败）'"`
 	// 更新服务器相关信息
 	ServerInfo string `json:"serverInfo" gorm:"type:varchar(3000);null;comment: '更新服务器相关信息'"`
 	// 备注信息

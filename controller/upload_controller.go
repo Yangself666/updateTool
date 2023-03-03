@@ -3,7 +3,6 @@ package controller
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 	"log"
 	"os"
 	"path"
@@ -73,8 +72,6 @@ func UploadFile(c *gin.Context) {
 		}
 	}
 
-	// 计算处理开始时间
-	start := time.Now()
 	// 保留原文件名和文件随机名称和相对路径
 	// 保存到数据库中
 	// 文件生成随机名称uuid
@@ -97,58 +94,39 @@ func UploadFile(c *gin.Context) {
 		return
 	}
 
-	var resultList []map[string]interface{}
-	// 传输文件到所有服务器
-	isZipFile := util.FileIsZip(file.Filename)
-	if isZipFile {
-		// 这里进行解压缩的上传
-		resultList, err = sftp_util.SendZipFileToAllServer(
-			projectId,
-			localFilePath,
-			remotePath)
-	} else {
-		resultList, err = sftp_util.SendFileToAllServer(
-			projectId,
-			localFilePath,
-			remotePath,
-			file.Filename)
-	}
-
-	if err != nil {
-		response.Fail(c, nil, err.Error())
-		return
-	}
-	resultBool, resultStr := util.UploadResultHandler(resultList)
-	// 计算处理总时间
-	elapsed := time.Since(start)
+	// 首先保存正在上传的历史记录
 	var userId uint
 	user, exists := c.Get("user")
 	if exists {
 		userId = user.(model.User).ID
 	}
-	if resultBool {
-		// 添加关联关系
-		history := model.UpdateHistory{
-			UserId:         userId,
-			Model:          gorm.Model{},
-			RemotePath:     remotePath,
-			LocalPath:      localFilePath,
-			FileName:       file.Filename,
-			UniqueFileName: newUuidName,
-			ProjectId:      uint(projectId),
-			PathId:         uint(pathId),
-			ServerInfo:     resultStr,
-		}
-		// 将上传记录保存到数据库
-		saveHistory := DB.Create(&history)
-		if saveHistory.Error != nil {
-			log.Println("保存上传记录时发生错误：", err)
-			response.Success(c, resultStr, fmt.Sprintf("操作成功，但保存上传记录时发生错误，总耗时: %v", elapsed))
-			return
-		}
-		response.Success(c, resultStr, fmt.Sprintf("操作成功，总耗时: %v", elapsed))
+	// 上传中
+	history := model.UpdateHistory{
+		UserId:         userId,
+		RemotePath:     remotePath,
+		LocalPath:      localFilePath,
+		FileName:       file.Filename,
+		UniqueFileName: newUuidName,
+		ProjectId:      uint(projectId),
+		PathId:         uint(pathId),
+		UpdateStatus:   1, // 上传中
+	}
+	// 将上传记录保存到数据库
+	saveHistory := DB.Create(&history)
+	if saveHistory.Error != nil {
+		log.Println("保存上传记录时发生错误：", err)
+		response.Fail(c, nil, "保存上传记录时发生错误")
 		return
 	}
 
-	response.Fail(c, resultStr, fmt.Sprintf("所有服务器上传失败，总耗时: %v", elapsed))
+	// 开始上传流程
+	// 传输文件到所有服务器
+	isZipFile := util.FileIsZip(file.Filename)
+	if isZipFile {
+		// 这里进行解压缩的上传
+		go sftp_util.SendZipFileToAllServer(history)
+	} else {
+		go sftp_util.SendFileToAllServer(history)
+	}
+	response.Success(c, nil, fmt.Sprintf("文件正在上传中，请在历史记录中查看结果。ID:%v", history.ID))
 }

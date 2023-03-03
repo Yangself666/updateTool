@@ -2,6 +2,7 @@ package sftp_util
 
 import (
 	"archive/zip"
+	"encoding/json"
 	"fmt"
 	"github.com/pkg/sftp"
 	"io"
@@ -21,36 +22,84 @@ import (
 // remoteFileName	string	远程文件名
 //
 // return			error	返回异常
-func SendFileToAllServer(projectId int, localFilePath string, remotePath string, remoteFileName string) ([]map[string]interface{}, error) {
-	var err error
+func SendFileToAllServer(history model.UpdateHistory) {
+	var (
+		// mutex      sync.Mutex // 同步锁
+		allSuccess  = true // 全部成功
+		allFail     = true // 全部失败
+		tempHistory model.UpdateHistory
+	)
 	// 获取项目关联的服务器
 	DB := common.GetDB()
 	serverList := make([]model.Server, 0)
-	DB.Model(&model.ProjectServerCon{}).Select("servers.*").Joins("left join servers on project_server_cons.server_id = servers.id").Where("project_server_cons.project_id = ?", projectId).Find(&serverList)
+	DB.Model(&model.ProjectServerCon{}).Select("servers.*").Joins("left join servers on project_server_cons.server_id = servers.id").Where("project_server_cons.project_id = ?", history.ProjectId).Find(&serverList)
 
 	if serverList == nil || len(serverList) <= 0 {
-		err = common.Error("该项目未绑定服务器，无法上传")
-		return nil, err
+		var serverSlice = make([]string, 0)
+		serverSlice = append(serverSlice, "该项目未绑定服务器，无法上传")
+		marshal, _ := json.Marshal(serverSlice)
+		tempHistory.ServerInfo = string(marshal)
+		tempHistory.UpdateStatus = 4
+		DB.Updates(&tempHistory)
 	}
-	// 返回结果集
-	resultList := make([]map[string]interface{}, 0)
+
 	// 循环关联的服务器，进行多协程的传递
 	result := make(chan map[string]interface{})
 	defer close(result)
 	for _, server := range serverList {
 		go SendFileToServer(
 			server,
-			localFilePath,
-			remotePath,
-			remoteFileName,
+			history.LocalPath,
+			history.RemotePath,
+			history.FileName,
 			result)
 	}
 	for i := 0; i < len(serverList); i++ {
-		// 收集执行结果
-		resultList = append(resultList, <-result)
+		var transResultMap = <-result
+		boolR := transResultMap["result"].(bool)
+		info := transResultMap["info"].(string)
+		// 全失败和全成功标记
+		if boolR {
+			info = "【成功】" + info
+			if allFail {
+				allFail = false
+			}
+		} else {
+			info = "【失败】" + info
+			if allSuccess {
+				allSuccess = false
+			}
+		}
+
+		// 查询历史记录
+		DB.First(&tempHistory, history.ID)
+		if tempHistory.ServerInfo == "" {
+			// 还没有结果字符串数组
+			var serverSlice = make([]string, 0)
+			serverSlice = append(serverSlice, info)
+			marshal, _ := json.Marshal(serverSlice)
+			tempHistory.ServerInfo = string(marshal)
+		} else {
+			var serverSlice = make([]string, 0)
+			// 有结果字符串数组
+			json.Unmarshal([]byte(tempHistory.ServerInfo), &serverSlice)
+			serverSlice = append(serverSlice, info)
+			marshal, _ := json.Marshal(serverSlice)
+			tempHistory.ServerInfo = string(marshal)
+		}
+		// 修改历史记录
+		DB.Updates(&tempHistory)
 	}
 
-	return resultList, nil
+	if allFail {
+		tempHistory.UpdateStatus = 4
+	} else if allSuccess {
+		tempHistory.UpdateStatus = 3
+	} else {
+		tempHistory.UpdateStatus = 2
+	}
+	// 修改历史记录
+	DB.Updates(&tempHistory)
 }
 
 // SendZipFileToAllServer 发送压缩文件到所有配置的服务器
@@ -59,34 +108,82 @@ func SendFileToAllServer(projectId int, localFilePath string, remotePath string,
 // remotePath		string	远程文件夹路径
 //
 // return			error 	返回异常
-func SendZipFileToAllServer(projectId int, localFilePath string, remotePath string) ([]map[string]interface{}, error) {
-	var err error
+func SendZipFileToAllServer(history model.UpdateHistory) {
+	var (
+		// mutex      sync.Mutex // 同步锁
+		allSuccess  = true // 全部成功
+		allFail     = true // 全部失败
+		tempHistory model.UpdateHistory
+	)
 	// 获取项目关联的服务器
 	DB := common.GetDB()
 	serverList := make([]model.Server, 0)
-	DB.Model(&model.ProjectServerCon{}).Select("servers.*").Joins("left join servers on project_server_cons.server_id = servers.id").Where("project_server_cons.project_id = ?", projectId).Find(&serverList)
+	DB.Model(&model.ProjectServerCon{}).Select("servers.*").Joins("left join servers on project_server_cons.server_id = servers.id").Where("project_server_cons.project_id = ?", history.ProjectId).Find(&serverList)
 
 	if serverList == nil || len(serverList) <= 0 {
-		err = common.Error("该项目未绑定服务器，无法上传")
-		return nil, err
+		var serverSlice = make([]string, 0)
+		serverSlice = append(serverSlice, "该项目未绑定服务器，无法上传")
+		marshal, _ := json.Marshal(serverSlice)
+		tempHistory.ServerInfo = string(marshal)
+		tempHistory.UpdateStatus = 4
+		DB.Updates(&tempHistory)
 	}
-	// 返回结果集
-	resultList := make([]map[string]interface{}, 0)
+
 	// 循环关联的服务器，进行多协程的传递
 	result := make(chan map[string]interface{})
 	defer close(result)
 	for _, server := range serverList {
 		go SendZipFileToServer(
 			server,
-			localFilePath,
-			remotePath,
+			history.LocalPath,
+			history.RemotePath,
 			result)
 	}
 	for i := 0; i < len(serverList); i++ {
-		// 收集执行结果
-		resultList = append(resultList, <-result)
+		var transResultMap = <-result
+		boolR := transResultMap["result"].(bool)
+		info := transResultMap["info"].(string)
+		// 全失败和全成功标记
+		if boolR {
+			info = "【成功】" + info
+			if allFail {
+				allFail = false
+			}
+		} else {
+			info = "【失败】" + info
+			if allSuccess {
+				allSuccess = false
+			}
+		}
+
+		// 查询历史记录
+		DB.First(&tempHistory, history.ID)
+		if tempHistory.ServerInfo == "" {
+			// 还没有结果字符串数组
+			var serverSlice = make([]string, 0)
+			serverSlice = append(serverSlice, info)
+			marshal, _ := json.Marshal(serverSlice)
+			tempHistory.ServerInfo = string(marshal)
+		} else {
+			var serverSlice = make([]string, 0)
+			// 有结果字符串数组
+			json.Unmarshal([]byte(tempHistory.ServerInfo), &serverSlice)
+			serverSlice = append(serverSlice, info)
+			marshal, _ := json.Marshal(serverSlice)
+			tempHistory.ServerInfo = string(marshal)
+		}
+		// 修改历史记录
+		DB.Updates(&tempHistory)
 	}
-	return resultList, nil
+	if allFail {
+		tempHistory.UpdateStatus = 4
+	} else if allSuccess {
+		tempHistory.UpdateStatus = 3
+	} else {
+		tempHistory.UpdateStatus = 2
+	}
+	// 修改历史记录
+	DB.Updates(&tempHistory)
 }
 
 // SendZipFileToServer 发送压缩文件到远程服务器
