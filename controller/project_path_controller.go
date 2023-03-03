@@ -31,8 +31,8 @@ func AddProjectPath(c *gin.Context) {
 		return
 	}
 	// 路径检查
-	if !strings.HasSuffix(projectPath.Path, "/") {
-		projectPath.Path = projectPath.Path + "/"
+	if !strings.HasPrefix(projectPath.Path, "/") {
+		projectPath.Path = "/" + projectPath.Path
 	}
 	projectPath.Path = path.Clean(projectPath.Path)
 
@@ -89,7 +89,7 @@ func DelProjectPath(c *gin.Context) {
 	response.Success(c, nil, "删除成功")
 }
 
-// EditProjectPath 新增项目路径
+// EditProjectPath 编辑项目路径
 func EditProjectPath(c *gin.Context) {
 	var projectPath = model.ProjectPath{}
 	err := c.BindJSON(&projectPath)
@@ -107,8 +107,8 @@ func EditProjectPath(c *gin.Context) {
 		return
 	}
 	// 路径检查
-	if !strings.HasSuffix(projectPath.Path, "/") {
-		projectPath.Path = projectPath.Path + "/"
+	if !strings.HasPrefix(projectPath.Path, "/") {
+		projectPath.Path = "/" + projectPath.Path
 	}
 	projectPath.Path = path.Clean(projectPath.Path)
 
