@@ -15,7 +15,7 @@ func CollectRoute(r *gin.Engine) *gin.Engine {
 	r.Static("/assets", "resource/web/assets")
 	// 解决vue等前端路由问题（gin路由不存在返回首页）
 	r.NoRoute(func(c *gin.Context) {
-		c.Redirect(http.StatusFound, "/")
+		c.Redirect(http.StatusFound, "/home")
 	})
 	r = apiRouter(r)
 

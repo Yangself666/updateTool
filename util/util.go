@@ -3,31 +3,12 @@ package util
 import (
 	"archive/zip"
 	"github.com/google/uuid"
-	"github.com/spf13/viper"
 	"strings"
-	"updateTool/model"
 )
 
 // GetUUID 生成无横杠的UUID
 func GetUUID() string {
 	return strings.ReplaceAll(uuid.New().String(), "-", "")
-}
-
-// GetServers 获取配置中国的服务器
-func GetServers() []model.ServerInfo {
-	var serverList []model.ServerInfo
-	mapString := viper.Get("remote-servers").([]interface{})
-	for _, item := range mapString {
-		serverInfo := item.(map[string]interface{})
-		info := model.ServerInfo{
-			Host:     serverInfo["host"].(string),
-			Port:     serverInfo["port"].(int),
-			Username: serverInfo["username"].(string),
-			Password: serverInfo["password"].(string),
-		}
-		serverList = append(serverList, info)
-	}
-	return serverList
 }
 
 // FileIsZip 检查文件是否为Zip压缩包
