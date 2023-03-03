@@ -3,6 +3,7 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	"updateTool/common"
+	"updateTool/dto"
 	"updateTool/model"
 	"updateTool/response"
 )
@@ -81,6 +82,11 @@ func GetServerListByProjectId(c *gin.Context) {
 	// 查询项目绑定服务器信息
 	serverList := make([]model.Server, 0)
 	DB.Select("servers.*").Model(&model.ProjectServerCon{}).Joins("left join servers on project_server_cons.server_id = servers.id").Where("project_server_cons.project_id = ?", project.ID).Find(&serverList)
+	var serverDtoList []dto.ServerDto
+	for _, server := range serverList {
+		serverDto := dto.ToServerDto(server)
+		serverDtoList = append(serverDtoList, serverDto)
+	}
 
-	response.Success(c, serverList, "请求成功")
+	response.Success(c, serverDtoList, "请求成功")
 }

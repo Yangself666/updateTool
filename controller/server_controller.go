@@ -5,6 +5,7 @@ import (
 	"github.com/pkg/sftp"
 	"log"
 	"updateTool/common"
+	"updateTool/dto"
 	"updateTool/model"
 	"updateTool/response"
 	"updateTool/sftp_util"
@@ -129,7 +130,12 @@ func GetServerList(c *gin.Context) {
 		tx.Where("server_type = ?", server.ServerType)
 	}
 	tx.Find(&serverList)
-	response.Success(c, serverList, "请求成功")
+	var serverDtoList []dto.ServerDto
+	for _, server := range serverList {
+		serverDto := dto.ToServerDto(server)
+		serverDtoList = append(serverDtoList, serverDto)
+	}
+	response.Success(c, serverDtoList, "请求成功")
 }
 
 // CheckServer 检查server是否可用
