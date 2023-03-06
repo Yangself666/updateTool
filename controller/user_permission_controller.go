@@ -16,7 +16,7 @@ func EditUserPermission(c *gin.Context) {
 		PermissionIdList []uint
 	}
 	param := Param{}
-	err := c.BindJSON(&param)
+	err := c.ShouldBindJSON(&param)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return
@@ -103,7 +103,7 @@ func GetPermissionListByUser(c *gin.Context) {
 		ID uint
 	}
 	var param Param
-	err := c.BindJSON(&param)
+	err := c.ShouldBindJSON(&param)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return

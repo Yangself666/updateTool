@@ -19,7 +19,7 @@ func EditProjectServer(c *gin.Context) {
 		ServerIdList []uint
 	}
 	param := Param{}
-	err := c.BindJSON(&param)
+	err := c.ShouldBindJSON(&param)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return
@@ -60,7 +60,7 @@ func EditProjectServer(c *gin.Context) {
 // GetServerListByProjectId 通过项目ID获取服务器列表
 func GetServerListByProjectId(c *gin.Context) {
 	var project model.Project
-	err := c.BindJSON(&project)
+	err := c.ShouldBindJSON(&project)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return

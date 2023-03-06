@@ -12,7 +12,7 @@ import (
 // AddPermission 添加权限
 func AddPermission(c *gin.Context) {
 	var permission model.Permission
-	err := c.BindJSON(&permission)
+	err := c.ShouldBindJSON(&permission)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return
@@ -42,7 +42,7 @@ func AddPermission(c *gin.Context) {
 // EditPermission 修改权限
 func EditPermission(c *gin.Context) {
 	var permission model.Permission
-	err := c.BindJSON(&permission)
+	err := c.ShouldBindJSON(&permission)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return
@@ -76,7 +76,7 @@ func EditPermission(c *gin.Context) {
 // DelPermission 删除权限
 func DelPermission(c *gin.Context) {
 	var permission model.Permission
-	err := c.BindJSON(&permission)
+	err := c.ShouldBindJSON(&permission)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return
@@ -105,7 +105,7 @@ func DelPermission(c *gin.Context) {
 // GetPermissionList 获取权限列表
 func GetPermissionList(c *gin.Context) {
 	var permission model.Permission
-	err := c.BindJSON(&permission)
+	err := c.ShouldBindJSON(&permission)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return

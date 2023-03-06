@@ -16,7 +16,7 @@ import (
 // AddProject 新增项目
 func AddProject(c *gin.Context) {
 	var projectDto = dto.ProjectDto{}
-	err := c.BindJSON(&projectDto)
+	err := c.ShouldBindJSON(&projectDto)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return
@@ -104,7 +104,7 @@ func AddProject(c *gin.Context) {
 // DelProject 删除项目
 func DelProject(c *gin.Context) {
 	var param = make(map[string]int, 0)
-	err := c.BindJSON(&param)
+	err := c.ShouldBindJSON(&param)
 	if err != nil {
 		log.Println("参数接收发生错误 -> ", err)
 		response.Fail(c, nil, "参数不正确")
@@ -143,7 +143,7 @@ func DelProject(c *gin.Context) {
 // DelCheckProject 删除前检测项目是否可以删除
 func DelCheckProject(c *gin.Context) {
 	var param = make(map[string]int, 0)
-	err := c.BindJSON(&param)
+	err := c.ShouldBindJSON(&param)
 	if err != nil {
 		log.Println("参数接收发生错误 -> ", err)
 		response.Fail(c, nil, "参数不正确")
@@ -189,7 +189,7 @@ func DelCheckProject(c *gin.Context) {
 // EditProject 编辑项目
 func EditProject(c *gin.Context) {
 	var projectDto = dto.ProjectDto{}
-	err := c.BindJSON(&projectDto)
+	err := c.ShouldBindJSON(&projectDto)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return
@@ -295,7 +295,7 @@ func EditProject(c *gin.Context) {
 // GetProjectList 获取所有项目
 func GetProjectList(c *gin.Context) {
 	var project = model.Project{}
-	err := c.BindJSON(&project)
+	err := c.ShouldBindJSON(&project)
 	if err != nil {
 		log.Println("参数解析失败 -> ", err)
 		response.Fail(c, nil, "参数不正确")
@@ -319,7 +319,7 @@ func GetProjectList(c *gin.Context) {
 // GetProjectById 通过ID查询单个项目信息
 func GetProjectById(c *gin.Context) {
 	var param = make(map[string]int, 0)
-	err := c.BindJSON(&param)
+	err := c.ShouldBindJSON(&param)
 	if err != nil {
 		log.Println("参数接收发生错误 -> ", err)
 		response.Fail(c, nil, "参数不正确")
@@ -359,7 +359,7 @@ func GetProjectById(c *gin.Context) {
 // GetPathListByProjectId 通过项目ID获取路径列表
 func GetPathListByProjectId(c *gin.Context) {
 	var param = make(map[string]int, 0)
-	err := c.BindJSON(&param)
+	err := c.ShouldBindJSON(&param)
 	if err != nil {
 		log.Println("参数接收发生错误 -> ", err)
 		response.Fail(c, nil, "参数不正确")
@@ -390,7 +390,7 @@ func GetPathListByProjectId(c *gin.Context) {
 // GetProjectListByUserId 通过用户ID获取项目列表(管理员)
 func GetProjectListByUserId(c *gin.Context) {
 	var param = make(map[string]int, 0)
-	err := c.BindJSON(&param)
+	err := c.ShouldBindJSON(&param)
 	if err != nil {
 		log.Println("参数接收发生错误 -> ", err)
 		response.Fail(c, nil, "参数不正确")

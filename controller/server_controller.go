@@ -18,7 +18,7 @@ import (
 // AddServer 新增服务器
 func AddServer(c *gin.Context) {
 	var server = model.Server{}
-	err := c.BindJSON(&server)
+	err := c.ShouldBindJSON(&server)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return
@@ -47,7 +47,7 @@ func AddServer(c *gin.Context) {
 // DelServer 删除服务器
 func DelServer(c *gin.Context) {
 	var param = make(map[string]int, 0)
-	err := c.BindJSON(&param)
+	err := c.ShouldBindJSON(&param)
 	if err != nil {
 		log.Println("参数接收发生错误 -> ", err)
 		response.Fail(c, nil, "参数不正确")
@@ -78,7 +78,7 @@ func DelServer(c *gin.Context) {
 // EditServer 编辑项目
 func EditServer(c *gin.Context) {
 	var server = model.Server{}
-	err := c.BindJSON(&server)
+	err := c.ShouldBindJSON(&server)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return
@@ -106,7 +106,7 @@ func EditServer(c *gin.Context) {
 // GetServerList 获取所有服务器列表
 func GetServerList(c *gin.Context) {
 	var server = model.Server{}
-	err := c.BindJSON(&server)
+	err := c.ShouldBindJSON(&server)
 	if err != nil {
 		log.Println("参数解析失败 -> ", err)
 		response.Fail(c, nil, "参数不正确")
@@ -145,7 +145,7 @@ func CheckServer(c *gin.Context) {
 		client *sftp.Client
 		err    error
 	)
-	err = c.BindJSON(&server)
+	err = c.ShouldBindJSON(&server)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return

@@ -17,7 +17,7 @@ import (
 // Rollback 恢复某一备份到生产
 func Rollback(c *gin.Context) {
 	param := make(map[string]int)
-	err := c.BindJSON(&param)
+	err := c.ShouldBindJSON(&param)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return
@@ -100,7 +100,7 @@ func Rollback(c *gin.Context) {
 // GetHistory 获取某生产地址的更新记录
 func GetHistory(c *gin.Context) {
 	var updateHistory = model.UpdateHistory{}
-	err := c.BindJSON(&updateHistory)
+	err := c.ShouldBindJSON(&updateHistory)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return

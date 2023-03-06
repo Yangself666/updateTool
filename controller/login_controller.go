@@ -19,7 +19,7 @@ func Login(c *gin.Context) {
 	// 获取登陆参数中的邮件地址和密码
 	// 获取json
 	var user = model.User{}
-	err := c.BindJSON(&user)
+	err := c.ShouldBindJSON(&user)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return

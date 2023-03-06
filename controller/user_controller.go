@@ -27,7 +27,7 @@ func Info(c *gin.Context) {
 // ListUser 获取用户列表
 func ListUser(c *gin.Context) {
 	var user = model.User{}
-	err := c.BindJSON(&user)
+	err := c.ShouldBindJSON(&user)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return
@@ -58,7 +58,7 @@ func ListUser(c *gin.Context) {
 // AddUser 添加用户
 func AddUser(c *gin.Context) {
 	var user = model.User{}
-	err := c.BindJSON(&user)
+	err := c.ShouldBindJSON(&user)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return
@@ -107,7 +107,7 @@ func AddUser(c *gin.Context) {
 // EditUser 修改用户
 func EditUser(c *gin.Context) {
 	var user = model.User{}
-	err := c.BindJSON(&user)
+	err := c.ShouldBindJSON(&user)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return
@@ -140,7 +140,7 @@ func SetUserAsAdmin(c *gin.Context) {
 		ID uint
 	}
 	var param Param
-	err := c.BindJSON(&param)
+	err := c.ShouldBindJSON(&param)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return
@@ -167,7 +167,7 @@ func SetUserAsNonAdmin(c *gin.Context) {
 		ID uint
 	}
 	var param Param
-	err := c.BindJSON(&param)
+	err := c.ShouldBindJSON(&param)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return
@@ -205,7 +205,7 @@ func SetUserAsNonAdmin(c *gin.Context) {
 // EditUserPassword 修改用户密码
 func EditUserPassword(c *gin.Context) {
 	var user = model.User{}
-	err := c.BindJSON(&user)
+	err := c.ShouldBindJSON(&user)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return
@@ -250,7 +250,7 @@ func EditUserPassword(c *gin.Context) {
 // DelUser 删除用户
 func DelUser(c *gin.Context) {
 	var user = model.User{}
-	err := c.BindJSON(&user)
+	err := c.ShouldBindJSON(&user)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return

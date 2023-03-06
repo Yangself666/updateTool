@@ -19,7 +19,7 @@ func AddProjectUser(c *gin.Context) {
 		UserId    int
 	}
 	param := Param{}
-	err := c.BindJSON(&param)
+	err := c.ShouldBindJSON(&param)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return
@@ -70,7 +70,7 @@ func DelProjectUser(c *gin.Context) {
 		UserId    int
 	}
 	param := Param{}
-	err := c.BindJSON(&param)
+	err := c.ShouldBindJSON(&param)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return
@@ -112,7 +112,7 @@ func EditProjectUser(c *gin.Context) {
 		UserIdList []uint
 	}
 	param := Param{}
-	err := c.BindJSON(&param)
+	err := c.ShouldBindJSON(&param)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return
@@ -153,7 +153,7 @@ func EditProjectUser(c *gin.Context) {
 // GetUserListByProjectId 通过项目ID获取用户列表
 func GetUserListByProjectId(c *gin.Context) {
 	var project model.Project
-	err := c.BindJSON(&project)
+	err := c.ShouldBindJSON(&project)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return

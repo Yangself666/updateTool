@@ -17,7 +17,7 @@ import (
 // AddProjectPath 新增项目路径
 func AddProjectPath(c *gin.Context) {
 	var projectPath = model.ProjectPath{}
-	err := c.BindJSON(&projectPath)
+	err := c.ShouldBindJSON(&projectPath)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return
@@ -62,7 +62,7 @@ func AddProjectPath(c *gin.Context) {
 // DelProjectPath 删除项目路径
 func DelProjectPath(c *gin.Context) {
 	var param = make(map[string]int, 0)
-	err := c.BindJSON(&param)
+	err := c.ShouldBindJSON(&param)
 	if err != nil {
 		log.Println("参数接收发生错误 -> ", err)
 		response.Fail(c, nil, "参数不正确")
@@ -92,7 +92,7 @@ func DelProjectPath(c *gin.Context) {
 // EditProjectPath 编辑项目路径
 func EditProjectPath(c *gin.Context) {
 	var projectPath = model.ProjectPath{}
-	err := c.BindJSON(&projectPath)
+	err := c.ShouldBindJSON(&projectPath)
 	if err != nil {
 		response.Fail(c, nil, "参数不正确")
 		return
