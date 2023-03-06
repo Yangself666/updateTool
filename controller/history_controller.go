@@ -35,6 +35,10 @@ func Rollback(c *gin.Context) {
 		response.Fail(c, nil, "该历史记录不存在")
 		return
 	}
+	if history.UpdateStatus == 1 || history.UpdateStatus == 4 {
+		response.Fail(c, nil, "该状态不允许回滚")
+		return
+	}
 	// 查看保存的路径ID
 	var projectPath model.ProjectPath
 	DB.Model(&model.ProjectPath{}).Where("id = ?", history.PathId).First(&projectPath)

@@ -23,6 +23,7 @@ import (
 func UploadFile(c *gin.Context) {
 	projectIdStr := c.PostForm("projectId")
 	pathIdStr := c.PostForm("pathId")
+	otherInfo := c.PostForm("otherInfo")
 	if projectIdStr == "" || pathIdStr == "" {
 		response.Fail(c, nil, "参数不完整")
 		return
@@ -110,6 +111,7 @@ func UploadFile(c *gin.Context) {
 		ProjectId:      uint(projectId),
 		PathId:         uint(pathId),
 		UpdateStatus:   1, // 上传中
+		OtherInfo:      otherInfo,
 	}
 	// 将上传记录保存到数据库
 	saveHistory := DB.Create(&history)
