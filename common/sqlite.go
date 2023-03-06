@@ -69,7 +69,6 @@ func DefaultPermissionsGenerator(db *gorm.DB) {
 		{PermissionName: "设置用户为管理员", MenuName: "user", PermissionPath: "/api/user/setUserAsAdmin"},
 		{PermissionName: "设置用户为非管理员", MenuName: "user", PermissionPath: "/api/user/setUserAsNonAdmin"},
 		{PermissionName: "添加项目", MenuName: "project", PermissionPath: "/api/project/add"},
-		{PermissionName: "添加项目", MenuName: "project", PermissionPath: "/api/project/add"},
 		{PermissionName: "删除项目", MenuName: "project", PermissionPath: "/api/project/del"},
 		{PermissionName: "删除前检测项目是否可以删除", MenuName: "project", PermissionPath: "/api/project/delCheck"},
 		{PermissionName: "修改项目信息", MenuName: "project", PermissionPath: "/api/project/edit"},
