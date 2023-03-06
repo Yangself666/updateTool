@@ -22,6 +22,8 @@ type UpdateHistoryDto struct {
 	ProjectId uint `json:"projectId"`
 	// 所属路径ID
 	PathId uint `json:"pathId"`
+	// 更新历史状态类型（1:上传中 2:部分成功 3:全部成功 4:失败）
+	UpdateStatus int `json:"updateStatus"`
 	// 更新服务器相关信息
 	ServerInfo string `json:"serverInfo"`
 	// 备注信息
@@ -45,6 +47,7 @@ func ToUpdateHistoryDto(history model.UpdateHistory) UpdateHistoryDto {
 		UniqueFileName: history.UniqueFileName,
 		ProjectId:      history.ProjectId,
 		PathId:         history.PathId,
+		UpdateStatus:   history.UpdateStatus,
 		ServerInfo:     history.ServerInfo,
 		OtherInfo:      history.OtherInfo,
 	}
