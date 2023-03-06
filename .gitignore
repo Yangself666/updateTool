@@ -9,7 +9,7 @@
 
 .idea/
 .vscode/
-log/
+logs/
 .DS_Store
 
 fileHistory/
