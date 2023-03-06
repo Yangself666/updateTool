@@ -152,7 +152,7 @@ func HasPermissionByPath(userId uint, path string) bool {
 	}
 	DB := common.GetDB()
 	var count int64
-	DB.Model(&model.UserPermissionCon{}).Select("permissions.*").Joins("left join permissions on user_permission_cons.permission_id = permissions.id").Where("user_permission_cons.user_id = ? and permissions.permission_path = ?", userId, path).Count(&count)
+	DB.Model(&model.UserPermissionCon{}).Joins("left join permissions on user_permission_cons.permission_id = permissions.id").Where("user_permission_cons.user_id = ? and permissions.permission_path = ?", userId, path).Count(&count)
 	// 如果包含该权限
 	if count > 0 {
 		result = true
