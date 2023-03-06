@@ -21,8 +21,6 @@ func main() {
 	r.Use(gin.Recovery())
 	r = InitLog(r)
 
-	gin.SetMode(gin.ReleaseMode)
-
 	// 加载路由
 	r = CollectRoute(r)
 

@@ -147,7 +147,7 @@ func GetPermissionListByUserId(userId uint) []model.Permission {
 // HasPermissionByPath 通过用户ID和访问路径查询是否有权限
 func HasPermissionByPath(userId uint, path string) bool {
 	result := false
-	if userId != 0 || path == "" {
+	if userId == 0 || path == "" {
 		return result
 	}
 	DB := common.GetDB()
