@@ -45,7 +45,7 @@ func InitConfig() {
 
 func InitLog(r *gin.Engine) *gin.Engine {
 	var (
-		logPath = "logs"
+		logPath = "../logs"
 		logName = "updateTool.log"
 		file    *os.File
 		err     error
