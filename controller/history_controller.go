@@ -117,7 +117,7 @@ func GetHistory(c *gin.Context) {
 	pathId := updateHistory.PathId
 
 	// 如果项目ID不为空
-	if projectId != 0 {
+	if projectId == 0 {
 		response.Fail(c, nil, "参数不完整")
 		return
 	}
