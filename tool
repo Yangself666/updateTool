@@ -1,6 +1,6 @@
 #!/bin/sh
 script_dir=$(cd $(dirname $0);pwd)
-service=$script_dir"/bin/updateTool"
+service=$script_dir"/updateTool"
 pid_file=$script_dir"/service.pid"
 
 
