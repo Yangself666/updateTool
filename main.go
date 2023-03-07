@@ -36,7 +36,7 @@ func main() {
 func InitConfig() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yml")
-	viper.AddConfigPath("../resource/config")
+	viper.AddConfigPath("resource/config")
 	err := viper.ReadInConfig()
 	if err != nil {
 		panic(err)
@@ -45,7 +45,7 @@ func InitConfig() {
 
 func InitLog(r *gin.Engine) *gin.Engine {
 	var (
-		logPath = "../logs"
+		logPath = "logs"
 		logName = "updateTool.log"
 		file    *os.File
 		err     error

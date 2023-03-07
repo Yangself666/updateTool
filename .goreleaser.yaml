@@ -8,17 +8,17 @@ before:
 #    - go generate ./...
 builds:
   - env:
-      - CGO_ENABLED=1
+      - CGO_ENABLED=0
     goos:
       - linux
       - windows
       - darwin
     goarch:
       - amd64
-#      - arm
-#      - arm64
+      - arm
+      - arm64
     main: .
-    binary: bin/updateTool
+    binary: updateTool
 
 archives:
   - format: tar.gz

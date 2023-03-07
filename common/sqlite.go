@@ -2,9 +2,9 @@ package common
 
 import (
 	"fmt"
+	"github.com/glebarez/sqlite"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"updateTool/model"
 )

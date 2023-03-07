@@ -1,4 +1,4 @@
 server:
   port: 8080
 datasource:
-  path: ../resource/db/update_tool.db
+  path: resource/db/update_tool.db

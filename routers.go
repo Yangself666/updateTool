@@ -10,9 +10,9 @@ import (
 func CollectRoute(r *gin.Engine) *gin.Engine {
 	r.Use(middleware.CORSMiddleware())
 	// 静态文件路由
-	r.StaticFile("/", "../resource/web/index.html")
-	r.StaticFile("/vite.svg", "../resource/web/vite.svg")
-	r.Static("/assets", "../resource/web/assets")
+	r.StaticFile("/", "resource/web/index.html")
+	r.StaticFile("/vite.svg", "resource/web/vite.svg")
+	r.Static("/assets", "resource/web/assets")
 	// 解决vue等前端路由问题（gin路由不存在返回首页）
 	r.NoRoute(func(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/")
