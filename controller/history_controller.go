@@ -116,9 +116,15 @@ func GetHistory(c *gin.Context) {
 	projectId := updateHistory.ProjectId
 	pathId := updateHistory.PathId
 
+	// 如果项目ID不为空
+	if projectId != 0 {
+		response.Fail(c, nil, "参数不完整")
+		return
+	}
+
 	DB := common.GetDB()
 	var histories []model.UpdateHistory
-	tx := DB.Model(&model.UpdateHistory{})
+	tx := DB.Model(&model.UpdateHistory{}).Where("project_id = ?", projectId)
 	// 查询路径不为空
 	if remotePath != "" {
 		tx = tx.Where("remote_path like ?", remotePath+"%")
@@ -130,10 +136,6 @@ func GetHistory(c *gin.Context) {
 	// 如果历史ID不为空
 	if id != 0 {
 		tx = tx.Where("id = ?", id)
-	}
-	// 如果项目ID不为空
-	if projectId != 0 {
-		tx = tx.Where("project_id = ?", projectId)
 	}
 	// 如果路径ID不为空
 	if pathId != 0 {
