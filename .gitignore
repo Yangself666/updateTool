@@ -12,5 +12,9 @@
 logs/
 .DS_Store
 
+dist/
+
 fileHistory/
 
+
+dist/
