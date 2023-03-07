@@ -46,12 +46,6 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
-brews:
-  - name: updateTool
-    tap:
-      owner: user
-      name: homebrew-tap
-      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
 
 # The lines beneath this are called `modelines`. See `:help modeline`
 # Feel free to remove those if you don't want/use them.
