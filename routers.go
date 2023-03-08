@@ -28,6 +28,8 @@ func apiRouter(r *gin.Engine) *gin.Engine {
 	apiRoutes := r.Group("/api")
 	// 登陆（不需要绑定权限）
 	apiRoutes.POST("/login", middleware.ExposeHeaderMiddleware(), controller.Login)
+	// 注销
+	apiRoutes.POST("/logout", middleware.AuthMiddleware(), controller.Logout)
 
 	// 用户相关接口
 	userApi := apiRoutes.Group("/user", middleware.AuthMiddleware())

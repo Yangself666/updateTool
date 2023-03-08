@@ -244,6 +244,10 @@ func EditUserPassword(c *gin.Context) {
 	// 修改密码
 	DB.Model(&model.User{}).Select("password").Where("id = ?", user.ID).Updates(&user)
 
+	// 删除缓存中的数据
+	cache := common.GetCache()
+	cache.Delete(string(user.ID))
+
 	response.Success(c, nil, "修改成功")
 }
 
@@ -268,6 +272,10 @@ func DelUser(c *gin.Context) {
 
 	// 删除用户
 	DB.Delete(&model.User{}, "id = ?", user.ID)
+
+	// 删除缓存中的数据
+	cache := common.GetCache()
+	cache.Delete(string(user.ID))
 
 	response.Success(c, nil, "删除成功")
 }

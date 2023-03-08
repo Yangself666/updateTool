@@ -5,6 +5,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
+	"time"
 	"updateTool/common"
 	"updateTool/model"
 	"updateTool/response"
@@ -60,7 +61,29 @@ func Login(c *gin.Context) {
 
 	// 将Token放置到Header中返回
 	c.Header("Authorization", "Bearer "+token)
+
+	// 缓存中添加用户信息
+	cache := common.GetCache()
+	// 2天过期
+	cache.Add(string(userByEmail.ID), userByEmail, 2*24*time.Hour)
+
 	// 返回结果
 	response.Success(c, nil, "登录成功")
 	return
+}
+
+// Logout 退出登陆
+func Logout(c *gin.Context) {
+	user, exists := c.Get("user")
+	var userId uint
+	if exists {
+		userId = user.(model.User).ID
+	} else {
+		response.Unauthorized(c)
+		return
+	}
+	// 删除缓存中的数据
+	cache := common.GetCache()
+	cache.Delete(string(userId))
+	response.Success(c, nil, "用户已退出登陆")
 }

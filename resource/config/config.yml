@@ -2,3 +2,6 @@ server:
   port: 8080
 datasource:
   path: resource/db/update_tool.db
+log:
+  path: logs
+  name: updateTool.log

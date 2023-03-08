@@ -14,6 +14,8 @@ import (
 var NoAuthPathMap = map[string]interface{}{
 	"/api/user/info":       nil,
 	"/api/user/permission": nil,
+	"/api/project/get":     nil,
+	"/api/logout":          nil,
 }
 
 // AuthMiddleware 权限验证中间件
@@ -34,6 +36,15 @@ func AuthMiddleware() gin.HandlerFunc {
 		// 解析Token
 		token, claims, err := common.ParseToken(tokenString)
 		if err != nil || !token.Valid {
+			response.Unauthorized(c)
+			c.Abort()
+			return
+		}
+
+		// 查询缓存中的数据
+		cache := common.GetCache()
+		_, exist := cache.Get(string(claims.UserId))
+		if !exist {
 			response.Unauthorized(c)
 			c.Abort()
 			return

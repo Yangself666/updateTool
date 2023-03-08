@@ -45,11 +45,20 @@ func InitConfig() {
 
 func InitLog(r *gin.Engine) *gin.Engine {
 	var (
-		logPath = "logs"
-		logName = "updateTool.log"
+		logPath string
+		logName string
 		file    *os.File
 		err     error
 	)
+	logPath = viper.GetString("log.path")
+	logName = viper.GetString("log.name")
+	if logPath == "" {
+		logPath = "logs"
+	}
+	if logName == "" {
+		logName = "updateTool.log"
+	}
+
 	// 文件夹是否存在
 	// 文件是否存在
 	_, err = os.Stat(logPath)
