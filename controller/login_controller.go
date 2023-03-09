@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"log"
@@ -65,7 +66,7 @@ func Login(c *gin.Context) {
 	// 缓存中添加用户信息
 	cache := common.GetCache()
 	// 2天过期
-	cache.Add(string(userByEmail.ID), userByEmail, 2*24*time.Hour)
+	cache.Add(fmt.Sprintf("%v-%v", common.GetUniqueKey(), userByEmail.ID), userByEmail, 2*24*time.Hour)
 
 	// 返回结果
 	response.Success(c, nil, "登录成功")
@@ -84,6 +85,6 @@ func Logout(c *gin.Context) {
 	}
 	// 删除缓存中的数据
 	cache := common.GetCache()
-	cache.Delete(string(userId))
+	cache.Delete(fmt.Sprintf("%v-%v", common.GetUniqueKey(), userId))
 	response.Success(c, nil, "用户已退出登陆")
 }

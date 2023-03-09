@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"updateTool/common"
@@ -246,7 +247,7 @@ func EditUserPassword(c *gin.Context) {
 
 	// 删除缓存中的数据
 	cache := common.GetCache()
-	cache.Delete(string(user.ID))
+	cache.Delete(fmt.Sprintf("%v-%v", common.GetUniqueKey(), user.ID))
 
 	response.Success(c, nil, "修改成功")
 }
@@ -275,7 +276,7 @@ func DelUser(c *gin.Context) {
 
 	// 删除缓存中的数据
 	cache := common.GetCache()
-	cache.Delete(string(user.ID))
+	cache.Delete(fmt.Sprintf("%v-%v", common.GetUniqueKey(), user.ID))
 
 	response.Success(c, nil, "删除成功")
 }

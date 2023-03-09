@@ -3,8 +3,10 @@ package common
 import (
 	"github.com/patrickmn/go-cache"
 	"time"
+	"updateTool/util"
 )
 
+var uniqueKey string
 var c *cache.Cache
 
 func InitCache() *cache.Cache {
@@ -18,4 +20,11 @@ func GetCache() *cache.Cache {
 		c = InitCache()
 	}
 	return c
+}
+
+func GetUniqueKey() string {
+	if uniqueKey == "" {
+		uniqueKey = util.GetUUID()
+	}
+	return uniqueKey
 }
