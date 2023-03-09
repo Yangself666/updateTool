@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
@@ -43,7 +44,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		// 查询缓存中的数据
 		cache := common.GetCache()
-		_, exist := cache.Get(string(claims.UserId))
+		_, exist := cache.Get(fmt.Sprintf("%v-%v", common.GetUniqueKey(), claims.UserId))
 		if !exist {
 			response.Unauthorized(c)
 			c.Abort()
