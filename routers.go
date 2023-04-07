@@ -135,7 +135,7 @@ func apiRouter(r *gin.Engine) *gin.Engine {
 	// 回滚
 	historyGroup.POST("/rollback", controller.Rollback)
 	// 下载历史文件
-	historyGroup.POST("/download", controller.Download)
+	historyGroup.GET("/download", controller.Download)
 
 	return r
 }

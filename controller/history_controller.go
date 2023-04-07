@@ -104,14 +104,9 @@ func Rollback(c *gin.Context) {
 
 // Download 下载某一备份文件
 func Download(c *gin.Context) {
-	param := make(map[string]int)
-	err := c.ShouldBindJSON(&param)
-	if err != nil {
-		response.Fail(c, nil, "参数不正确")
-		return
-	}
-	historyId := param["id"]
-	if historyId == 0 {
+	// 获取参数
+	historyId := c.Query("id")
+	if historyId == "" {
 		response.Fail(c, nil, "记录ID不能为空")
 		return
 	}
