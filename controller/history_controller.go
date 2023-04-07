@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
+	"os"
 	"strings"
 	"time"
 	"updateTool/common"
@@ -99,6 +100,44 @@ func Rollback(c *gin.Context) {
 	}
 
 	response.Success(c, nil, fmt.Sprintf("文件正在回滚中，请在历史记录中查看结果。ID:%v", rollbackHistory.ID))
+}
+
+// Download 下载某一备份文件
+func Download(c *gin.Context) {
+	param := make(map[string]int)
+	err := c.ShouldBindJSON(&param)
+	if err != nil {
+		response.Fail(c, nil, "参数不正确")
+		return
+	}
+	historyId := param["id"]
+	if historyId == 0 {
+		response.Fail(c, nil, "记录ID不能为空")
+		return
+	}
+
+	DB := common.GetDB()
+	history := model.UpdateHistory{}
+	DB.First(&history, historyId)
+	if history.ID == 0 {
+		response.Fail(c, nil, "该历史记录不存在")
+		return
+	}
+	if history.UpdateStatus == 4 {
+		response.Fail(c, nil, "该状态不允许文件下载")
+		return
+	}
+
+	if history.LocalPath == "" || history.FileName == "" {
+		response.Fail(c, nil, "文件不存在，下载失败")
+		return
+	}
+	if _, err := os.Stat(history.LocalPath); err != nil {
+		response.Fail(c, nil, "文件不存在，下载失败")
+		return
+	}
+
+	response.ResponseFile(c, history.LocalPath, history.FileName)
 }
 
 // GetHistory 获取某生产地址的更新记录

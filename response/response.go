@@ -13,6 +13,12 @@ func Response(c *gin.Context, httpStatus int, code int, data interface{}, msg st
 	c.JSON(httpStatus, gin.H{"code": code, "data": data, "msg": msg})
 }
 
+func ResponseFile(c *gin.Context, filePath string, fileName string) {
+	c.Header("Content-Disposition", "attachment; filename="+fileName)
+	c.Header("Content-Type", "application/octet-stream")
+	c.File(filePath)
+}
+
 func Success(c *gin.Context, data interface{}, msg string) {
 	Response(c, http.StatusOK, 200, data, msg)
 }

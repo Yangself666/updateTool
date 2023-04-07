@@ -96,6 +96,7 @@ func DefaultPermissionsGenerator(db *gorm.DB) {
 		{PermissionName: "上传文件接口", MenuName: "upload", PermissionPath: "/api/upload/file"},
 		{PermissionName: "获取上传历史", MenuName: "history", PermissionPath: "/api/history/get"},
 		{PermissionName: "回滚到历史文件", MenuName: "history", PermissionPath: "/api/history/rollback"},
+		{PermissionName: "下载历史文件", MenuName: "history", PermissionPath: "/api/history/download"},
 	}
 	db.Create(&permissions)
 }
